@@ -1,0 +1,11 @@
+v,binary_search,0,Node0x10080b3f0,entry,33,38,8
+v,binary_search,1,Node0x10080b440,bb,40,41,13
+v,binary_search,2,Node0x10080b490,bb1,42,43,10
+v,binary_search,3,Node0x10080b4e0,bb2,46,46,9
+v,binary_search,4,Node0x10080b530,bb3,47,47,5
+v,binary_search,5,Node0x10080b580,bb4,50,50,5
+v,binary_search,6,Node0x10080b5d0,bb5,39,39,5
+v,binary_search,7,Node0x10080b620,bb6,53,53,6
+v,binary_search,8,Node0x10080b670,return,53,53,3
+v,main,9,Node0x100805170,entry,29,30,3
+v,main,10,Node0x1008051c0,return,30,30,2

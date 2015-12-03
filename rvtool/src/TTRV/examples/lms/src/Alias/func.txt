@@ -1,0 +1,8 @@
+rand
+log
+fabs
+sqrt
+sin
+gaussian
+main
+lms

@@ -1,0 +1,4 @@
+v,main,0,Node0x2e82af0,entry,7,14,9
+v,main,1,Node0x2e82b50,while.cond,14,14,5
+v,main,2,Node0x2e82bb0,while.body,16,21,11
+v,main,3,Node0x2e82c10,while.end,23,27,5

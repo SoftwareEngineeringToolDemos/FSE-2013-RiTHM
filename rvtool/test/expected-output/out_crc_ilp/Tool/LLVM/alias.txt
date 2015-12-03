@@ -1,0 +1,26 @@
+[g0] 
+icrc
+13
+may alias
+icrc.init
+arrayidx
+arrayidx6
+arrayidx11
+arrayidx15
+arrayidx34
+arrayidx40
+arrayidx56
+arrayidx58
+arrayidx67
+arrayidx77
+arrayidx97
+arrayidx103
+
+[g1] 
+main
+3
+may alias
+arrayidx
+arrayidx3
+arrayidx7
+

@@ -1,0 +1,11 @@
+sqrt,x
+sqrt,dx
+sqrt,diff
+sin,app
+gaussian,v1
+gaussian,gstore
+gaussian,gaus
+main,signal_amp
+main,d
+lms,px
+lms,sigma

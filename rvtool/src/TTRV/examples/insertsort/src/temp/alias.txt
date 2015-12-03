@@ -1,0 +1,16 @@
+Alias Set Tracker: 15 alias sets for 21 pointer values.
+  AliasSet[0x100804bd0, 17] may alias, Mod/Ref   Pointers: (i32* %_rvtool, 4), (i32* %_rvtool1, 4), (i32* %_rvtool2, 4), (i32* %_rvtool3, 4), (i32* %_rvtool4, 4), (i32* %_rvtool5, 4), (i32* %_rvtool6, 4), (i32* %_rvtool7, 4), (i32* %_rvtool8, 4), (i32* %_rvtool9, 4), (i32* %_rvtool10, 4), (i32* %_rvtool14, 4), (i32* %_rvtool20, 4), (i32* %_rvtool23, 4), (i32* %_rvtool27, 4), (i32* %_rvtool33, 4), (i32* %_rvtool38, 4)
+  AliasSet[0x100804c30, 1] must alias, Mod        forwarding to 0x100804bd0
+  AliasSet[0x100804c90, 1] must alias, Mod        forwarding to 0x100804bd0
+  AliasSet[0x1008041a0, 1] must alias, Mod        forwarding to 0x100804bd0
+  AliasSet[0x100804200, 1] must alias, Mod        forwarding to 0x100804bd0
+  AliasSet[0x100804290, 1] must alias, Mod        forwarding to 0x100804bd0
+  AliasSet[0x10080cdd0, 1] must alias, Mod        forwarding to 0x100804bd0
+  AliasSet[0x10080ce60, 1] must alias, Mod        forwarding to 0x100804bd0
+  AliasSet[0x10080cef0, 1] must alias, Mod        forwarding to 0x100804bd0
+  AliasSet[0x10080cf80, 1] must alias, Mod        forwarding to 0x100804bd0
+  AliasSet[0x10080d010, 1] must alias, Mod        forwarding to 0x100804bd0
+  AliasSet[0x10080d0a0, 1] must alias, Mod/Ref   Pointers: (i32* %i, 4)
+  AliasSet[0x10080d130, 1] must alias, Mod/Ref   Pointers: (i32* %j, 4)
+  AliasSet[0x10080d1f0, 1] must alias, Mod/Ref   Pointers: (i32* %temp, 4)
+  AliasSet[0x10080d370, 1] must alias, Ref       Pointers: (i32* %retval, 4)

@@ -1,0 +1,3 @@
+binary_search,binary_search_low,36
+binary_search,binary_search_up,37
+binary_search,binary_search_up,42

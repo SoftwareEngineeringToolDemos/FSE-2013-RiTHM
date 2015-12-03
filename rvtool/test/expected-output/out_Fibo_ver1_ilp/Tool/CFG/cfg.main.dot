@@ -1,0 +1,12 @@
+digraph "CFG for 'main' function" {
+	label="CFG for 'main' function";
+
+	Node0x2e82af0 [shape=record,label="{entry\n 7--12--14\n,7@5,8@0,11@1,12@0,14@0\n}"];
+	Node0x2e82af0 -> Node0x2e82b50;
+	Node0x2e82b50 [shape=record,label="{while.cond\n 14--14\n,14@5\n|{<s0>T|<s1>F}}"];
+	Node0x2e82b50:s0 -> Node0x2e82bb0;
+	Node0x2e82b50:s1 -> Node0x2e82c10;
+	Node0x2e82bb0 [shape=record,label="{while.body\n 16--20--21\n,16@3,17@3,18@1,19@2,20@0,21@0\n}"];
+	Node0x2e82bb0 -> Node0x2e82b50;
+	Node0x2e82c10 [shape=record,label="{while.end\n 23--25--27\n,23@3,25@1,27@0\n}"];
+}

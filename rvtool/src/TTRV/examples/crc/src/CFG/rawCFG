@@ -1,0 +1,73 @@
+digraph "CFG for 'icrc' function" {
+	label="CFG for 'icrc' function";
+	Node0x100810250 [shape=record,label="{entry\n 22--28--31\n,22@3,23@1,28@5,31@2\n|{<s0>T|<s1>F}}"];
+	Node0x100810250:s0 -> Node0x1008102a0;
+	Node0x100810250:s1 -> Node0x100810390;
+	Node0x1008102a0 [shape=record,label="{bb\n 32--33\n,32@2,33@1\n}"];
+	Node0x1008102a0 -> Node0x100810340;
+	Node0x1008102f0 [shape=record,label="{bb1\n 34--35--33\n,34@11,35@20,33@3\n}"];
+	Node0x1008102f0 -> Node0x100810340;
+	Node0x100810340 [shape=record,label="{bb2\n 33--33\n,33@4\n|{<s0>T|<s1>F}}"];
+	Node0x100810340:s0 -> Node0x1008102f0;
+	Node0x100810340:s1 -> Node0x100810390;
+	Node0x100810390 [shape=record,label="{bb3\n 38--38\n,38@4\n|{<s0>T|<s1>F}}"];
+	Node0x100810390:s0 -> Node0x1008103e0;
+	Node0x100810390:s1 -> Node0x100810430;
+	Node0x1008103e0 [shape=record,label="{bb4\n 38--38\n,38@12\n}"];
+	Node0x1008103e0 -> Node0x1008104d0;
+	Node0x100810430 [shape=record,label="{bb5\n 39--39\n,39@4\n|{<s0>T|<s1>F}}"];
+	Node0x100810430:s0 -> Node0x100810480;
+	Node0x100810430:s1 -> Node0x1008104d0;
+	Node0x100810480 [shape=record,label="{bb6\n 40--40\n,40@21\n}"];
+	Node0x100810480 -> Node0x1008104d0;
+	Node0x1008104d0 [shape=record,label="{bb7\n 44--44\n,44@3\n}"];
+	Node0x1008104d0 -> Node0x100810660;
+	Node0x100810520 [shape=record,label="{bb8\n 45--45\n,45@4\n|{<s0>T|<s1>F}}"];
+	Node0x100810520:s0 -> Node0x100810570;
+	Node0x100810520:s1 -> Node0x1008105c0;
+	Node0x100810570 [shape=record,label="{bb9\n 46--46\n,46@17\n}"];
+	Node0x100810570 -> Node0x100810610;
+	Node0x1008105c0 [shape=record,label="{bb10\n 49--49\n,49@13\n}"];
+	Node0x1008105c0 -> Node0x100810610;
+	Node0x100810610 [shape=record,label="{bb11\n 51--44\n,51@13,44@3\n}"];
+	Node0x100810610 -> Node0x100810660;
+	Node0x100810660 [shape=record,label="{bb12\n 44--44\n,44@6\n|{<s0>T|<s1>F}}"];
+	Node0x100810660:s0 -> Node0x100810520;
+	Node0x100810660:s1 -> Node0x1008106b0;
+	Node0x1008106b0 [shape=record,label="{bb13\n 53--53\n,53@4\n|{<s0>T|<s1>F}}"];
+	Node0x1008106b0:s0 -> Node0x100810700;
+	Node0x1008106b0:s1 -> Node0x100810750;
+	Node0x100810700 [shape=record,label="{bb14\n 54--54\n,54@4\n}"];
+	Node0x100810700 -> Node0x1008107a0;
+	Node0x100810750 [shape=record,label="{bb15\n 57--57\n,57@21\n}"];
+	Node0x100810750 -> Node0x1008107a0;
+	Node0x1008107a0 [shape=record,label="{bb16\n 59--59\n,59@7\n}"];
+	Node0x1008107a0 -> Node0x1008107f0;
+	Node0x1008107f0 [shape=record,label="{return\n 59--59\n,59@4\n}"];
+}
+digraph "CFG for 'icrc1' function" {
+	label="CFG for 'icrc1' function";
+	Node0x10080dca0 [shape=record,label="{entry\n 8--11--13\n,8@3,10@0,11@7,13@1\n}"];
+	Node0x10080dca0 -> Node0x10080de30;
+	Node0x10080dcf0 [shape=record,label="{bb\n 14--14\n,14@4\n|{<s0>T|<s1>F}}"];
+	Node0x10080dcf0:s0 -> Node0x10080dd40;
+	Node0x10080dcf0:s1 -> Node0x10080dd90;
+	Node0x10080dd40 [shape=record,label="{bb1\n 15--15\n,15@8\n}"];
+	Node0x10080dd40 -> Node0x10080dde0;
+	Node0x10080dd90 [shape=record,label="{bb2\n 17--17\n,17@5\n}"];
+	Node0x10080dd90 -> Node0x10080dde0;
+	Node0x10080dde0 [shape=record,label="{bb3\n 13--13\n,13@5\n}"];
+	Node0x10080dde0 -> Node0x10080de30;
+	Node0x10080de30 [shape=record,label="{bb4\n 13--13\n,13@4\n|{<s0>T|<s1>F}}"];
+	Node0x10080de30:s0 -> Node0x10080dcf0;
+	Node0x10080de30:s1 -> Node0x10080de80;
+	Node0x10080de80 [shape=record,label="{bb5\n 19--19\n,19@7\n}"];
+	Node0x10080de80 -> Node0x10080ded0;
+	Node0x10080ded0 [shape=record,label="{return\n 19--19\n,19@4\n}"];
+}
+digraph "CFG for 'main' function" {
+	label="CFG for 'main' function";
+	Node0x1008101b0 [shape=record,label="{entry\n 66--74--75\n,66@3,67@0,69@0,70@3,71@2,72@6,73@5,74@6,75@3\n}"];
+	Node0x1008101b0 -> Node0x100810200;
+	Node0x100810200 [shape=record,label="{return\n 75--75\n,75@3\n}"];
+}

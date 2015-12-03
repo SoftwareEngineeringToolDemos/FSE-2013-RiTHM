@@ -1,0 +1,6 @@
+GOOMF_Header,<#include "/Users/samaneh/Documents/Linux-Monitor/example/bs/GOOMFInstrumentor.h"> 
+GOOMF_Init,<initContext();> 
+GOOMF_Dest,<destroyContext();> 
+binary_search,binary_search_low,36,< _GOOMF_nextEvent(context,2,(void*)(&binary_search_low);> 
+binary_search,binary_search_up,37,< _GOOMF_nextEvent(context,0,(void*)(&binary_search_up);> 
+binary_search,binary_search_up,42,< _GOOMF_nextEvent(context,0,(void*)(&binary_search_up);> 

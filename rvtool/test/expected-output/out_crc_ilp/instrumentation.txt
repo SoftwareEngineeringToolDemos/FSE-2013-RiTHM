@@ -1,0 +1,5 @@
+GOOMF_Header,<#include "GOOMFInstrumentor.h"> 
+GOOMF_Init,<//initContext();> 
+GOOMF_Dest,<//destroyContext();> 
+icrc1,icrc1_i,61,< _GOOMF_nextEvent(context,0,(void*)(&icrc1_i));> 
+icrc1,icrc1_i,61,< _GOOMF_nextEvent(context,0,(void*)(&icrc1_i));> 

@@ -1,0 +1,29 @@
+digraph "CFG for 'binary_search' function" {
+	label="CFG for 'binary_search' function";
+	Node0x10080b3f0 [shape=record,label="{entry\n 33--37--38\n,33@2,35@3,36@0,37@0,38@1\n}"];
+	Node0x10080b3f0 -> Node0x10080b5d0;
+	Node0x10080b440 [shape=record,label="{bb\n 40--41\n,40@6,41@7\n|{<s0>T|<s1>F}}"];
+	Node0x10080b440:s0 -> Node0x10080b490;
+	Node0x10080b440:s1 -> Node0x10080b4e0;
+	Node0x10080b490 [shape=record,label="{bb1\n 42--43\n,42@4,43@6\n}"];
+	Node0x10080b490 -> Node0x10080b5d0;
+	Node0x10080b4e0 [shape=record,label="{bb2\n 46--46\n,46@9\n|{<s0>T|<s1>F}}"];
+	Node0x10080b4e0:s0 -> Node0x10080b530;
+	Node0x10080b4e0:s1 -> Node0x10080b580;
+	Node0x10080b530 [shape=record,label="{bb3\n 47--47\n,47@5\n}"];
+	Node0x10080b530 -> Node0x10080b5d0;
+	Node0x10080b580 [shape=record,label="{bb4\n 50--50\n,50@5\n}"];
+	Node0x10080b580 -> Node0x10080b5d0;
+	Node0x10080b5d0 [shape=record,label="{bb5\n 39--39\n,39@5\n|{<s0>T|<s1>F}}"];
+	Node0x10080b5d0:s0 -> Node0x10080b440;
+	Node0x10080b5d0:s1 -> Node0x10080b620;
+	Node0x10080b620 [shape=record,label="{bb6\n 53--53\n,53@6\n}"];
+	Node0x10080b620 -> Node0x10080b670;
+	Node0x10080b670 [shape=record,label="{return\n 53--53\n,53@3\n}"];
+}
+digraph "CFG for 'main' function" {
+	label="CFG for 'main' function";
+	Node0x100805170 [shape=record,label="{entry\n 29--30\n,29@2,30@0\n}"];
+	Node0x100805170 -> Node0x1008051c0;
+	Node0x1008051c0 [shape=record,label="{return\n 30--30\n,30@2\n}"];
+}

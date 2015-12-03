@@ -1,0 +1,7 @@
+v,main,0,Node0x31a2ca0,entry,53,61,24
+v,main,1,Node0x31a2d00,while.cond,61,61,4
+v,main,2,Node0x31a2d60,while.body,65,69,4
+v,main,3,Node0x31a2dc0,while.cond11,69,69,12
+v,main,4,Node0x31a2e20,while.body16,74,78,22
+v,main,5,Node0x31a5890,while.end,82,83,5
+v,main,6,Node0x31a58f0,while.end27,87,87,3

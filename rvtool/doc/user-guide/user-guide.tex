@@ -1,0 +1,308 @@
+\documentclass[12pt]{book}
+
+%\usepackage{cvs-support}
+\usepackage{varioref,listings,array,subfigure,makeidx,fancyhdr,amsfonts,url,vmargin,color}
+\usepackage[pdftex]{graphicx}
+\usepackage{caption2}
+%\usepackage[longfirst]{glosstex}
+\usepackage[Sonny]{fncychap}
+\usepackage{xspace}
+
+
+
+\usepackage[pdftex,letterpaper=true,pagebackref=false]{hyperref} % with basic options
+		% N.B. pagebackref=true provides links back from the References to the body text. This can cause trouble for printing.
+\hypersetup{
+    plainpages=false,       % needed if Roman numbers in frontpages
+    pdfpagelabels=true,     % adds page number as label in Acrobat's page count
+    bookmarks=true,         % show bookmarks bar?
+    unicode=false,          % non-Latin characters in Acrobatâ€™s bookmarks
+    pdftoolbar=true,        % show Acrobatâ€™s toolbar?
+    pdfmenubar=true,        % show Acrobatâ€™s menu?
+    pdffitwindow=false,     % window fit to page when opened
+    pdfstartview={FitH},    % fits the width of the page to the window
+    pdftitle={uWaterloo\ LaTeX\ Thesis\ Template},    % title: CHANGE THIS TEXT!
+%    pdfauthor={Author},    % author: CHANGE THIS TEXT! and uncomment this line
+%    pdfsubject={Subject},  % subject: CHANGE THIS TEXT! and uncomment this line
+%    pdfkeywords={keyword1} {key2} {key3}, % list of keywords, and uncomment this line if desired
+    pdfnewwindow=true,      % links in new window
+    colorlinks=true,        % false: boxed links; true: colored links
+    linkcolor=blue,         % color of internal links
+    citecolor=green,        % color of links to bibliography
+    filecolor=magenta,      % color of file links
+    urlcolor=cyan           % color of external links
+}
+
+
+\setlength\captionindent{2mm}
+\renewcommand*\captionfont{\sf \small}
+\renewcommand*\captionlabeldelim{.\hspace*{.5cm}}
+
+\renewcommand*\captionlabelfont{\sf \it \small}
+
+
+\newcommand{\HRule}[1]{\rule{\linewidth}{#1}}
+\newcommand{\ltwo}{L$^{2}$ }
+\newcommand{\family}[1]{\emph{#1}}
+
+\newcommand{\method}[1]{\textsf{\small #1}}
+\newcommand{\no}{{\bfseries -}}
+\newcommand{\yes}{$\surd$}
+\newcommand{\well}{$\approx$}
+\newcommand{\na}{\bfseries n/a}
+\newcommand{\auto}{\textbullet}
+\newcommand\uc[1]{\textsf{\small #1}}
+
+\newcommand{\rithm}{RiTHM\xspace}
+\newcommand{\LTLtri}{{\sc Ltl}$_3$\xspace}
+\newcommand{\LTL}{{\sc Ltl}\xspace}
+\newcommand\code[1]{\textsf{\small #1}}
+
+\usepackage{multirow}
+
+
+
+
+\setlength{\parskip}{8pt}
+\graphicspath{{fig/}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% AFTER \begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\input{title-pg}
+
+\pagestyle{plain}
+\setcounter{page}{2}
+\pagenumbering{roman}
+
+% T A B L E   O F   C O N T E N T S
+% ---------------------------------
+\renewcommand\contentsname{Table of Contents}
+\tableofcontents
+\cleardoublepage
+\phantomsection
+%\newpage
+
+% L I S T   O F   T A B L E S
+% ---------------------------
+\addcontentsline{toc}{chapter}{List of Tables}
+\listoftables
+\cleardoublepage
+\phantomsection		% allows hyperref to link to the correct page
+%\newpage
+
+% L I S T   O F   F I G U R E S
+% -----------------------------
+\addcontentsline{toc}{chapter}{List of Figures}
+\listoffigures
+\cleardoublepage
+\phantomsection		% allows hyperref to link to the correct page
+%\newpage
+
+% L I S T   O F   S Y M B O L S
+% -----------------------------
+% To include a Nomenclature section
+% \addcontentsline{toc}{chapter}{\textbf{Nomenclature}}
+% \renewcommand{\nomname}{Nomenclature}
+% \printglossary
+% \cleardoublepage
+% \phantomsection % allows hyperref to link to the correct page
+% \newpage
+
+% Change page numbering back to Arabic numerals
+\pagenumbering{arabic}
+
+\pagestyle{fancy}
+%\addtolength{\headwidth}{\marginparsep}
+%\addtolength{\headwidth}{\marginparwidth}
+\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+\renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
+\fancyhf{}
+\fancyhead[LE,RO]{\small\bfseries\thepage}
+\fancyhead[LO]{\footnotesize\bfseries\rightmark}
+\fancyhead[RE]{\footnotesize\bfseries\leftmark}
+\fancypagestyle{plain}{%
+\fancyhead{} % get rid of headers
+\renewcommand{\headrulewidth}{0pt} % and the line
+}
+
+\chapter*{About This Guide}
+
+This guide is intended for software developers that wish to use RiTHM to verify their systems at runtime. RiTHM is a tool chain that automates the process of runtime verification of projects written in C by leveraging time-triggered monitoring to observe the system's runtime behavior, and the GPU many-core technology to verify the runtime behavior. The rest of the guide provides (1) an overview of RiTHM, (2) the installation procedure, (3) RiTHM's directory structure, (4) RiTHM's system requirements and limitations, and (5) how to use RiTHM along with an example.
+
+\chapter{RiTHM Overview}
+
+In a computing system, correctness refers to the assertion that the system satisfies its specification at all times. Achieving system correctness is a major problem for todayÕs large software systems. Verification and testing are arguably the two most common approaches to ensure program correctness. However, verification may suffer from the state explosion problem, and testing may not be able to cover all possible execution scenarios of the system. These limitations argue for \emph{runtime verification} where it inspects a program's runtime behavior to verify a set of properties at run time. Runtime verification frameworks mainly consist of two major components, the \emph{monitor} which extracts information from the program at run time, and the \emph{verification engine} which verifies a set of properties at run time with respect to the information provided by the monitor.
+Most monitoring approaches in runtime verification are \emph{event-triggered}. In these approaches, the occurrence of an event of interest triggers the monitor to extract information and subsequently call the verification engine for property evaluation. This technique leads to defects such as unpredictable monitoring overhead and potentially bursts of monitoring invocation at run time. Such defects can cause unpredictable behavior at run time; especially in real-time embedded safety/mission-critical systems, where it can result in catastrophic consequences. To tackle these drawbacks, we propose \textbf{RiTHM}: Runtime Time-triggered Heterogeneous Monitoring.
+ 
+RiTHM is a runtime verification framework which uses \emph{time-triggered} monitoring to observe the system's runtime behavior. The time-triggered monitor runs in parallel with the program and extracts (i.e., samples) the program state at fixed time intervals (i.e., the sampling period) and subsequently call the verify to evaluate a set of \LTLtri properties with respect to the sampled program state. Our studies show that the time-triggered monitor of RiTHM  results in observing bounded monitoring overhead and predictable monitoring invocation at run time, a feature required for runtime verification of real-time embedded safety/mission-critical systems.
+
+\section{Time-triggered Monitor}
+
+The time-triggered monitor is a separate thread which runs in parallel with the program and samples the program with respect to a pre-defined fixed sampling period. An issue surrounding time-triggered monitoring is \emph{sound state reconstruction} (i.e., sampling of all states vital to the verification of the properties). Hence, RiTHM leverages static analysis of the program to determine the \emph{longest sampling period} which ensures sound state reconstruction. To further decrease the runtime overhead of monitoring, RiTHM devises a technique to add minimal instrumentation into the program to further increase the sampling period of the time-triggered monitor while ensuring sound state reconstruction. RiTHM intends to add the instrumentation such that minimal additional memory is required.
+
+
+\section{Verification Engine}
+
+When a time-triggered monitor reads the state of a program, it passes them to the verification engine to evaluate a set of  \LTLtri properties. The verification engine evaluates the set of properties in a parallel fashion and makes use of the GPU many-core technology. The verification engine uses two parallel monitoring algorithms that effectively exploit the many-core platform available in the GPU. The verification engine further reduces monitoring overhead, monitoring interference, and power consumption due to leveraging the GPU technology.
+
+
+
+\chapter{Getting Started}
+
+This chapter will guide you through the procedure to download RiTHM's source files and build the tool from source. At the moment, \rithm is targeted for both 32- and 64-bit Ubuntu 12.04 LTS and 32-bit Ubuntu 11.10. Most of the build and execution infrastructure should be portable to any *nix system, but will require additional efforts to build \rithm's dependencies. The support or other *nix distributions is under construction and will be available in the future.
+
+\section{Pre-requisites}
+The following is a list of things that you will require to build and develop \rithm:
+
+\noindent \textbf{Operating System}
+\begin{itemize}
+\item Any computer running Ubuntu 12.04 LTS or  32-bit Ubuntu 11.10.
+\item  {\tt sudo} access with your user account in Ubuntu.
+\end{itemize}
+
+\noindent \textbf{get-apt Packages}
+
+\begin{itemize}
+\item {\tt ia32-libs}: If the user is running Ubuntu 64-bit, {\tt i132-libs} package must be installed. This package allows the user to skip compilation processes specific to 64-bit machines and run 32-bit executables on 64-bit platforms.
+\item  {\tt realpath}: This package is used by some of the invocation scripts to resolve path parsing issues and path dependencies. 
+\item {\tt qmake}: If the user wishes to build the GUI from the committed source file.
+\end{itemize}
+
+\noindent \textbf{OpenCL Packages}
+
+\rithm allows the user to choose whether the verification engine performs its verification on CPU or on GPU. Thus, the OpenCL supporting packages must be perviously installed. 
+
+\begin{itemize}
+\item \underline{Systems with AMD/ATI GPU}: AMD GPU OpenCL SDK can be downloaded from here:
+	 \begin{center}
+           	\url{http://developer.amd.com/tools/hc/AMDAPPSDK/downloads/Pages/default.aspx}
+           \end{center}
+\item \underline{System with NVIDIA GPU}: NVIDI OpenCL SDK can be downloaded from here: 
+	 \begin{center}
+           	\url{http://www.nvidia.com/Download/index.aspx?lang=en-us}
+           \end{center}
+\end{itemize}
+
+\noindent \underline{Remark}: If your system uses AMD GPU/APU card, but  AMD GPU OpenCL SDK is not installed, it will be installed automatically when running ./build\_deps.sh.
+
+\noindent \textbf{General Applications}
+
+\begin{itemize}
+\item Text editor of your choice.
+\item An integrated development environment (IDE), if you are not as comfortable with the command line.
+\end{itemize}
+
+\noindent \textbf{Optional Dependencies}
+
+If you intend to acquire \rithm from Bitbucket (see Section~\ref{sec-install}), you will need the following:
+
+\begin{itemize}
+	\item {\tt git}: If {\tt git} has not been installed on your machine, you can install it on Ubuntu by typing the following command in the terminal:
+           \begin{center}
+           	{\tt sudo apt-get install git}
+           \end{center}
+	\item SSH keys, if you wish to connect to Bitbucket via SSH
+	\item Bitbucket account (this is optional; you can choose to download the source and work locally).
+\end{itemize}
+
+
+\noindent \textbf{Other Dependencies}
+
+The following packages are packaged along with  \rithm's source code and will be installed automatically when running ./build\_deps.sh:
+
+\begin{itemize}
+	\item {\tt lp\_solve}.
+	\item {\tt libconfig}.
+	\item {\tt open CSV} (java lib).
+	\item {\tt apache commons} (java lib).
+	\item {\tt LLVM}.
+	\item {\tt clang}.
+\end{itemize}
+
+\section{Installation}
+\label{sec-install}
+
+\noindent \textbf{Step 1.} Make sure you have installed all the pre-requisites for OpenCL Packages and General Applications.
+
+\noindent \textbf{Step 2.} Acquire \rithm. You can do so by using one of the following methods:
+
+\begin{itemize}
+\item Acquire it directly from the Real-time Embedded System's group webpage. Download the tar ball of the tool provided by the following link:
+	\begin{center}
+           	\url{https://uwaterloo.ca/embedded-software-group/projects/rithm}
+           \end{center}
+\item Acquire it from Bitbucket.  To work with the git repository on Bitbucket, you can either retrieve the tool sing HTTPS or SSH. . If you plan on using HTTPS to communicate with the Bitbucket repository, change to the directory that you would like to make the clone in and then enter the following command in the terminal:
+         \begin{center}
+	{\tt git clone https://<username>@bitbucket.org/embedded\_software\_group/rvtool.git [name of local directory]} 
+	\end{center}
+where {\tt <username>} is your Bitbucket username, and an optional argument {\tt [name of local directory]}, which designates the name of the folder the cloned repository will be in. The {\tt git clone} command is slightly different for SSH:
+\begin{center}
+	{\tt git clone git@bitbucket.org:embedded\_software\_group/rvtool.git [name of local directory]} 
+\end{center}
+
+\end{itemize}
+
+
+\noindent \textbf{Step 3.} After cloning the repository to your local machine, it is time to start building the tool from source. First, change the directory in your terminal to the root repository directory. Here, there are two files you will need to invoke to build the tool:
+\begin{itemize}
+	\item {\tt build-deps.sh}
+	\item {\tt Makefile}
+\end{itemize}
+
+{\tt build-deps.sh} contains the necessary commands required to pull in all of the tool's external dependencies and build them as necessary. This will also establish the subdirectory named `build', which will contain all compiled objects and executables. From the terminal, run the following command:
+\begin{center}
+	{\tt sudo ./build-deps.sh}
+\end{center}
+{\tt sudo} access is required only to install missing packages using {\tt apt-get}. The following packages may be installed using {\tt apt-get}:
+\begin{itemize}
+	\item{\tt realpath}: converts any relative directory/file paths into absolute paths.
+	\item {\tt subversion}: version control required to pull LLVM and Clang source.
+	\item {\tt ia32-libs}: needed for machines running 64-bit Ubuntu for compatibility with other libraries.
+	\item {\tt AMD APP SDK}: (Note: this is installed in {\tt /opt/AMDAPP/} as opposed to the `build' directory).
+	\item {\tt Qt and QMake}.
+	\item {\tt lp\_solve}.
+	\item {\tt libconfig}.
+	\item {\tt open CSV} (java lib).
+	\item {\tt apache commons} (java lib).
+	\item {\tt LLVM}.
+	\item {\tt clang}.
+\end{itemize}
+
+This script will likely take one or more hours to finish, because the LLVM framework and Clang takes a long time to compile and build for the first time.
+
+\noindent \textbf{Step 4.} When the {\tt build-deps.sh}, run {\tt make} form the root repository directory in the terminal (no need in ÒsudoÓ) to build the tool. 
+When {\tt make} finishes running, you can change to the `build' directory and run \rithm by either using command-line (calling  {\tt run.sh}) or the GUI (initiating {\tt rvtool}). For more details about running RiTHM, please refer to Section~\ref{sec-run}.
+
+\chapter{Repository Structure}
+
+\chapter{Running \rithm}
+\label{sec-run}
+
+\rithm can be initiated via both from a GUI environment (recommended) and from command-line. The GUI environment allows the specification of all the required parameters to run \rithm. Then the GUI wraps the parameters and invokes the appropriate shell script that, in turn, the script sequentially invokes the shell scripts with their corresponding command-line parameters.
+
+\section{Running \rithm via GUI}
+
+Figure~\ref{pic-gui} shows the main GUI window and explanation of the input fields. The description of the fields are as follows:
+
+\begin{itemize}
+\item
+\end{itemize}
+
+
+
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+

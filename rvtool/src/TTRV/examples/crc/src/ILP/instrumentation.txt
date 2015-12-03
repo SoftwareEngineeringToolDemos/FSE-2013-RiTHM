@@ -1,0 +1,7 @@
+GOOMF_Header,<#include "/Users/samaneh/Documents/Linux-Monitor/example/crc/GOOMFInstrumentor.h"> 
+GOOMF_Init,<initContext();> 
+GOOMF_Dest,<destroyContext();> 
+icrc,cword,28,< _GOOMF_nextEvent(context,2,(void*)(&cword);> 
+icrc,cword,38,< _GOOMF_nextEvent(context,2,(void*)(&cword);> 
+icrc,icrctb,35,< _GOOMF_nextEvent(context,0,(void*)(&icrctb);> 
+icrc,rchr,35,< _GOOMF_nextEvent(context,1,(void*)(&rchr);> 

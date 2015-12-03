@@ -1,0 +1,3 @@
+fib
+main
+->35::  %0 = call i32 (...)* bitcast (i32 (i32)* @fib to i32 (...)*)(i32 %_rvtool) nounwind, !dbg !11

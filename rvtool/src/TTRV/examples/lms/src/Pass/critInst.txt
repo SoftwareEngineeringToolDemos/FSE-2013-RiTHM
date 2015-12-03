@@ -1,0 +1,14 @@
+lms,_rvtool5>px
+lms,_rvtool27>px
+lms,_rvtool28>px
+sin,app
+gaussian,gstore
+gaussian,gaus
+main,d
+main,signal_amp
+sqrt,x
+lms,px
+gaussian,v1
+sqrt,diff
+lms,sigma
+sqrt,dx

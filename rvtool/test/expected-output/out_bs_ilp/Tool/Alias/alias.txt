@@ -1,0 +1,10 @@
+Alias Set Tracker: 1 alias sets for 0 pointer values.
+  AliasSet[0x36c5020, 0] may alias, Mod/Ref   
+Alias Set Tracker: 7 alias sets for 8 pointer values.
+  AliasSet[0x36c5020, 1] must alias, Mod/Ref   Pointers: (i32* %x.addr, 4)
+  AliasSet[0x36b1b70, 1] must alias, Mod/Ref   Pointers: (i32* @binary_search_low, 4)
+  AliasSet[0x36b1bc0, 1] must alias, Mod/Ref   Pointers: (i32* @binary_search_up, 4)
+  AliasSet[0x36b0b80, 1] must alias, Mod/Ref   Pointers: (i32* %fvalue, 4)
+  AliasSet[0x36b0c10, 1] must alias, Mod/Ref   Pointers: (i32* %mid, 4)
+  AliasSet[0x36c35e0, 2] may alias, Ref       Pointers: (i32* %key, 4), (i32* %key6, 4)
+  AliasSet[0x36beef0, 1] must alias, Ref       Pointers: (i32* %value, 4)

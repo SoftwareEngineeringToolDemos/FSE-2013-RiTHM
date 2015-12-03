@@ -1,0 +1,3 @@
+{name = "icrctb", type = "int", scope="local", function="icrc"},
+{name = "rchr", type = "int", scope="local", function="icrc"},
+{name = "cword", type = "int", scope="local", function="icrc"},

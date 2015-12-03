@@ -1,0 +1,21 @@
+digraph "CFG for 'icrc1' function" {
+	label="CFG for 'icrc1' function";
+
+	Node0x10080dca0 [shape=record,label="{entry\n 8--11--13\n,8@3,10@0,11@7,13@1\n}"];
+	Node0x10080dca0 -> Node0x10080de30;
+	Node0x10080dcf0 [shape=record,label="{bb\n 14--14\n,14@4\n|{<s0>T|<s1>F}}"];
+	Node0x10080dcf0:s0 -> Node0x10080dd40;
+	Node0x10080dcf0:s1 -> Node0x10080dd90;
+	Node0x10080dd40 [shape=record,label="{bb1\n 15--15\n,15@8\n}"];
+	Node0x10080dd40 -> Node0x10080dde0;
+	Node0x10080dd90 [shape=record,label="{bb2\n 17--17\n,17@5\n}"];
+	Node0x10080dd90 -> Node0x10080dde0;
+	Node0x10080dde0 [shape=record,label="{bb3\n 13--13\n,13@5\n}"];
+	Node0x10080dde0 -> Node0x10080de30;
+	Node0x10080de30 [shape=record,label="{bb4\n 13--13\n,13@4\n|{<s0>T|<s1>F}}"];
+	Node0x10080de30:s0 -> Node0x10080dcf0;
+	Node0x10080de30:s1 -> Node0x10080de80;
+	Node0x10080de80 [shape=record,label="{bb5\n 19--19\n,19@7\n}"];
+	Node0x10080de80 -> Node0x10080ded0;
+	Node0x10080ded0 [shape=record,label="{return\n 19--19\n,19@4\n}"];
+}

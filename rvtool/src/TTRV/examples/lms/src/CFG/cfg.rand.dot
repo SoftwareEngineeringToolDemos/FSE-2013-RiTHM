@@ -1,0 +1,7 @@
+digraph "CFG for 'rand' function" {
+	label="CFG for 'rand' function";
+
+	Node0x100812a20 [shape=record,label="{entry\n 23--24\n,23@5,24@7\n}"];
+	Node0x100812a20 -> Node0x100805180;
+	Node0x100805180 [shape=record,label="{return\n 24--24\n,24@3\n}"];
+}

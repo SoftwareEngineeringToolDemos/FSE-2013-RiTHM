@@ -1,0 +1,238 @@
+#include<signal.h>
+#include <sys/time.h>
+#include <sys/mman.h>
+#include <pthread.h>    /* POSIX Threads */
+#include <sched.h>
+#include <stdlib.h>
+#include "Controller.h"
+#include "fuzzy.h"
+#include "pid.h"
+
+int bufftrig_count = 0;
+int samptrig_count = 0;
+//struct timespec start_nano[CONNMAX], end_nano[CONNMAX];
+long elapsed_seconds;
+struct timespec sleep_time;
+pthread_mutex_t lock;
+int initial_BufferSize;
+int initial_Safety;
+FILE *fp;
+float error;
+float avg_eventcount;
+float avg_samplingperiod;
+float avg_deltatime;
+
+_GOOMF_context context;
+
+int kill_monitor = 0;
+
+typedef struct _program_thread_args {
+    int argc;
+    char **argv;
+} program_thread_args;
+
+/* prototype for thread routine */
+void monitor_thread ( );
+void main_thread ( );
+void report();
+int initContext(){
+return _GOOMF_initContext(&context,_GOOMF_enum_buffer_trigger,_GOOMF_enum_alg_seq,_GOOMF_enum_sync_invocation,MAX_BS
+);
+};
+
+//-----------------------------------------------------------------------------------------------------------
+void runMonitor(int bufferTriggered) {
+	timespec current_time,delta_time;
+	long timeElapsed;
+	int bs_delta =  0;
+    clock_gettime(CLOCK_REALTIME, &current_time);
+    delta_time = diff(last_timestamp, current_time);
+
+    timeElapsed = delta_time.tv_sec*1000000+delta_time.tv_nsec/1000;
+    last_timestamp = current_time;
+    error = (float)(BUFF_SIZE)*(safety)/100-(float)(event_count);
+
+    avg_err = (avg_err*sample_count + BUFF_SIZE_REAL - event_count);
+    avg_eventcount = avg_eventcount*sample_count + event_count;
+    avg_samplingperiod = avg_samplingperiod*sample_count + sampling_period;
+    avg_deltatime = avg_deltatime*sample_count+timeElapsed;
+    sample_count++;
+    avg_err /= sample_count;
+    avg_eventcount /= sample_count;
+    avg_samplingperiod /= sample_count;
+    avg_deltatime /= sample_count;
+    sample_bt += bufferTriggered;
+
+
+    if (sample_count == FREQ) {
+    	bs_delta = getBufferSize();
+
+    	if (BUFF_SIZE_REAL+bs_delta>100)
+    		bs_delta = 100-BUFF_SIZE_REAL;
+    	if (BUFF_SIZE_REAL+bs_delta<initial_BufferSize)
+    		bs_delta = initial_BufferSize-BUFF_SIZE_REAL;
+
+    	BUFF_SIZE_REAL += bs_delta;
+    	safety = (int)((float)initial_BufferSize*(float)initial_Safety/(float)BUFF_SIZE_REAL);
+    	BUFF_SIZE=BUFF_SIZE_REAL;
+
+    	PRINTDEBUG("|\n|\n|\nBuffer Size is %i, safety %% is %i and val is %i\n|\n|\n", BUFF_SIZE_REAL,safety,safety*BUFF_SIZE/100);
+    	//sample_count = 0;
+    	avg_err = 0;
+    	sample_bt = 0;
+    	delta_time.tv_sec = timeElapsed/1000000;
+    	delta_time.tv_nsec = (timeElapsed%1000000)*1000;
+    	switch (controller_type) {
+    	    case 1:
+    	    	PID(error, delta_time, bufferTriggered);
+    	    	break;
+    	    case 2:
+    	    	sampling_period = getSamplingPeriodForError((float)avg_eventcount,delta_time, 0);
+    	    	break;
+    	    case 3:
+    	    	sampling_period = getSamplingPeriodForError2((float)avg_eventcount,delta_time, 0);
+    	    	break;
+    	    case 4:
+    	    case 5:
+    	    	sampling_period = getSamplingPeriodForError3((float)event_count,delta_time, 0);
+    	    	break;
+    	    }
+    	sample_count = 0;
+    }
+
+
+	sleep_time.tv_nsec = (sampling_period%1000000)*1000;
+	sleep_time.tv_sec = sampling_period/1000000;
+	if (bufferTriggered)
+		bufftrig_count++;
+	else
+		samptrig_count++;
+	PRINTDEBUG("Sampling Period is %li, Sleep Time is %ld:%ld\n", sampling_period, sleep_time.tv_sec, sleep_time.tv_nsec);
+	//PRINTDEBUG("SP: %12li, %i events, error = %i\n", sampling_period, event_count, error);
+	if (bufferTriggered)
+		PRINTDEBUG("BUFFER TRIGGERED-(BUFFCOUNT:%i, SAMPCOUNT:%i)-)\n", bufftrig_count, samptrig_count);
+	PRINTRT("%f\t%li\n", (float)(event_count)/(float)(BUFF_SIZE)*(safety)/100, timeElapsed);
+	if (fp!=0) {
+		fflush(fp);
+		//fseek(fp,0,SEEK_SET);
+	}
+	fflush(stdout);
+	flush_buffer();
+	report();
+}
+
+//-----------------------------------------------------------------------------------------------------------
+
+void main_thread (void *program_main_data)
+{
+	int i,j,k,y;
+	struct sched_param param;
+        program_thread_args *args = (program_thread_args *)program_main_data;
+
+	int policy = SCHED_OTHER;
+	/* scheduling parameters of target thread */
+	pthread_setschedparam(pthread_self(), policy, &param);
+    
+    int *retVal = malloc(sizeof(int));
+    if (!retVal) {
+        fprintf(stderr, "main_thread() malloc failed! Aborting...\n");
+        pthread_exit(0);
+    }
+    *retVal = 0;
+	// Main thread Body
+    if (!args) { *retVal = 1; pthread_exit(retVal); }
+    *retVal =     program_main();
+
+    kill_monitor = 1;
+    pthread_exit((void *)retVal);
+	
+}
+void monitor_thread ()
+{
+	struct timeval start, end;
+	struct timespec start_nano, end_nano;
+	int i = 0,j=0;
+
+	// super user only -- switch to real-time mode and lock memory pages
+	struct sched_param param;
+
+	int policy = SCHED_FIFO;
+	/* scheduling parameters of target thread */
+	pthread_setschedparam(pthread_self(), policy, &param);
+	(mlockall(MCL_CURRENT | MCL_FUTURE));
+
+	setbuf(stdout, NULL);
+
+	sleep_time.tv_nsec = (sampling_period%1000000)*1000;
+	sleep_time.tv_sec = sampling_period/1000000;
+
+	while(1) {
+		clock_gettime(CLOCK_REALTIME, &start_nano);
+		clock_nanosleep(CLOCK_REALTIME, 0, &sleep_time, NULL);
+		runMonitor(0);
+		//clock_gettime(CLOCK_REALTIME, &end_nano);
+		PRINTDEBUG("Sleep Time is %ld:%ld\n", sleep_time.tv_sec, sleep_time.tv_nsec);
+	}
+
+	pthread_exit(0); /* exit */
+}
+
+int main(int argc, char** argv)
+{
+	pthread_t thread1, thread2;  /* thread variables */
+	cpu_set_t  mask;
+    program_thread_args *args = malloc(sizeof(program_thread_args));
+    args->argc = argc;
+    args->argv = argv;
+	initial_BufferSize = BUFF_SIZE;
+	BUFF_SIZE_REAL = BUFF_SIZE;
+	initial_Safety = safety;
+
+
+
+
+    buffer_init();
+    initController();
+    initFuzzy(controller_type >= 5);
+	
+	// This is just a switch to run the program in hi-res timer evaluation mode
+	// If checktimers() is called it will output the average of a timer with a given interval
+	if (argc >= 2 && !strcmp(argv[1],"-test")) {
+		printf("%s\n", argv[1]);
+	}
+	else {
+		/* create monitor and main thread */
+		pthread_create(&thread1, NULL, (void *) &monitor_thread, 0);
+		pthread_create(&thread2, NULL, (void *) &main_thread, (void *)args);
+
+		/* Main block now waits for both threads to terminate, before it exits
+   If main block exits, both threads exit, even if the threads have not
+   finished their work */
+		pthread_join(thread2, NULL);
+		pthread_join(thread1, NULL);
+	}
+
+	/* exit */
+    free(args);
+     buffer_end();
+	exit(0);
+} /* main() */
+
+
+
+
+void report(){ 
+	_GOOMF_enum_verdict_type v[3];
+	char str[100]; 
+	register int i; 
+	_GOOMF_getCurrentStatus(context, v); 
+	_GOOMF_typeToString(&v[0], str); 
+	fprintf(logFile,	"property0: %s\n", str); 
+
+	_GOOMF_typeToString(&v[1], str); 
+	fprintf(logFile,	"property1: %s\n", str); 
+
+	_GOOMF_typeToString(&v[2], str); 
+	fprintf(logFile,	"property2: %s\n", str); 
+
+}; 

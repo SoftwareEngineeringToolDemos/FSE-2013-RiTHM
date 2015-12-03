@@ -1,0 +1,4 @@
+GOOMF_Header,<#include "GOOMFInstrumentor.h"> 
+GOOMF_Init,<//initContext();> 
+GOOMF_Dest,<//destroyContext();> 
+binary_search,binary_search_low,83,< _GOOMF_nextEvent(context,0,(void*)(&binary_search_low));> 

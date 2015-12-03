@@ -1,0 +1,22 @@
+[g0] 
+main
+17
+may alias
+arrayidx
+arrayidx1
+arrayidx2
+arrayidx3
+arrayidx4
+arrayidx5
+arrayidx6
+arrayidx7
+arrayidx8
+arrayidx9
+arrayidx10
+arrayidx12
+arrayidx14
+arrayidx18
+arrayidx21
+arrayidx23
+arrayidx26
+

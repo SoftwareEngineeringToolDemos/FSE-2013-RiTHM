@@ -1,0 +1,109 @@
+1) Installing realpath:
+sudo apt-get install realpath
+
+Successful
+
+2) Installing qmake:
+sudo apt-get install qt4-qmake
+
+Successful
+
+3) Install AMD APP SDK:
+Download from http://developer.amd.com/tools/hc/AMDAPPSDK/downloads/Pages/default.aspx
+Extrct the folder and from inside run:
+sudo ./Install-AMD-APP.sh
+
+Successful
+
+4) Run RiTHM installation script:
+sudo ./buils-deps.sh
+
+Seems to run OK except at the end:
+"./build-deps.sh: line 15: [: install ok installed: integer expression expected"
+"./build-deps.sh: line 21: [: install ok installed: integer expression expected"
+
+Detects that realpath and ia32-libs already installed.
+
+5) sudo ./configure
+
+No such file found - assuming the tool already configured
+
+6) make
+
+make[1]: /usr/bin/uic-qt4: Command not found
+
+7) Appears that I'm missing the libqt4-dev package (note for the second step):
+sudo apt-get install libqt4-dev
+
+Successful
+
+8) Running make again:
+"make --directory=src/frontend/gui 
+make[1]: Entering directory `/home/shay/git-repos/rvtool/src/frontend/gui'
+/usr/bin/uic-qt4 mainwindow.ui -o ../../../build/frontend/gui/ui/h/ui_mainwindow.h
+Could not create output file
+make[1]: *** [../../../build/frontend/gui/ui/h/ui_mainwindow.h] Error 1
+make[1]: Leaving directory `/home/shay/git-repos/rvtool/src/frontend/gui'
+make: *** [src/frontend/gui] Error 2"
+
+Needs to be run with sudo
+
+9) sudo make
+	- comiles frontend
+	- compiles GooMFGenerator
+	- fails to compile Globalizer:
+"make --directory=src/java 
+make[1]: Entering directory `/home/shay/git-repos/rvtool/src/java'
+nice javac -g -d bin/ -sourcepath src/ -cp bin:lib/opencsv-2.3.jar:lib/commons-io-2.4.jar: src/ca/uwaterloo/esg/rvtool/globalizer/globalize/Globalize.java
+javac: directory not found: bin/
+Usage: javac <options> <source files>
+use -help for a list of possible options
+make[1]: *** [bin/ca/uwaterloo/esg/rvtool/globalizer/globalize/Globalize.class] Error 2
+make[1]: Leaving directory `/home/shay/git-repos/rvtool/src/java'
+make: *** [src/java] Error 2"
+
+10) Creating bin directory under /src/java/ and running sudo make again
+
+Seems to compile all java sources successfull, but at the end:
+"compiled Java classes successfully.
+java.io.FileNotFoundException: ../../../build/jars/rvtool.jar (No such file or directory)
+	at java.io.FileOutputStream.open(Native Method)
+	at java.io.FileOutputStream.<init>(FileOutputStream.java:209)
+	at java.io.FileOutputStream.<init>(FileOutputStream.java:99)
+	at sun.tools.jar.Main.run(Main.java:187)
+	at sun.tools.jar.Main.main(Main.java:1167)
+mkdir -p ../../build/jars/
+copying all jar libraries to build directory
+cp lib/*.jar ../../build/jars/
+jar file successfully created.
+make[1]: Leaving directory `/home/shay/git-repos/rvtool/src/java'
+make --directory=src/TTRV 
+make[1]: Entering directory `/home/shay/git-repos/rvtool/src/TTRV'
+g++ -c src/cleaningAlias.cpp -o ../../build/TTRV/cleaningAlias.o
+Assembler messages:
+Fatal error: can't create ../../build/TTRV/cleaningAlias.o: No such file or directory
+make[1]: *** [../../build/TTRV/cleaningAlias.o] Error 1
+make[1]: Leaving directory `/home/shay/git-repos/rvtool/src/TTRV'
+make: *** [src/TTRV] Error 2"
+
+11) Running the same for the second time solves the rvtool.jar problem, but not cleaningAlias.cpp.
+Apparently TTRV make file failes to create rvtool/build/TTRV directory. After creating the directory manually
+and running sudo make again the make finally succeeds.
+
+==================
+
+Try2:
+./build-deps.sh runs smoothe, the only problems are:
+
+- the build directory is build1 instead of build
+- /build/TTRV is still not created, need to be created manually
+- in /build/GooMF/GooMFLibrary/Makefile the libOpenCL path should be changed to path/x86_64 depending 
+on the machine
+
+==================
+
+Try3: (after moving to llvm 3.2)
+./build-deps.sh runs smoothe
+
+make problems:
+ - DebugInfo.h moved from llvm/tool/llvm/ to /llvm/tool/llvm/Analysis. Need to be copied back to llvm/tool/llvm/

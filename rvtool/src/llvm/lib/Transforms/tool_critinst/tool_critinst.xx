@@ -1,0 +1,687 @@
+//===- CritInst.cpp - Extracting Critical Instructions " ---------------===//
+//
+//                     The LLVM Compiler Infrastructure
+//
+//
+//===----------------------------------------------------------------------===//
+//
+// This file implements an LLVM Pass that recieves the list of variables of
+// interest and parses the IR of the program to extract the critical instructions.
+//
+//===----------------------------------------------------------------------===//
+
+#include "llvm/Pass.h" 
+#include "llvm/DebugInfo.h"
+#include "llvm/Function.h"
+#include "llvm/Module.h"
+#include "llvm/Operator.h"
+#include "llvm/Instruction.h"
+#include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/CommandLine.h"
+#include "llvm/ADT/StringExtras.h"
+#include "llvm/ADT/Statistic.h"
+#include "llvm/Support/InstIterator.h"
+#include "llvm/Support/CallSite.h"
+#include "llvm/IntrinsicInst.h"
+#include "llvm/Type.h"
+#include "llvm/ADT/Twine.h"
+#include "llvm/Support/raw_ostream.h"
+#include <iostream>
+#include <fstream>
+#include <stdio.h>
+#include <stdlib.h>
+
+using namespace llvm;
+using namespace std;
+
+
+namespace {
+	
+	
+  struct critInstructions {
+	  std::string func;
+	  std::string variable;
+  };
+	
+	struct aliasList {
+		int type;
+		std::string aliasType;
+		std::string function;
+
+		std::vector<std::string> origVar;
+		std::vector<std::string> aliasVec;
+	};
+	
+	struct nullList {
+		std::string variable;
+		int line;
+	};
+	
+
+	static cl::opt<int> mayAlias("mayalias", cl::Hidden, cl::Required,cl::desc("check may alias as well (put > 0 if yes, otherwise 0)"));
+	
+	static cl::opt<string> directory("dir", cl::Hidden, cl::Required,cl::desc("cdirectory of tool files"));
+
+
+
+	
+  struct tool_critinst : public ModulePass {
+    static char ID; // Pass identification, replacement for typeid
+
+    tool_critinst() : ModulePass(ID) {}
+	  
+	std::vector<critInstructions*> critInstVector;
+	std::vector<aliasList*> aliasVector;
+	std::vector<nullList*> nullInstVector;
+
+
+
+
+    virtual bool runOnModule(Module &M) {
+		std::string  error = "hello";
+
+		errs() << ">>>>>>>>>>>>>>> Start Extracting Lines for Instrumentation\n";
+
+
+
+		string outfileName = directory;
+		outfileName.append("/Pass/critLines.txt");
+		static  std::ofstream outFile(outfileName.c_str(), std::ios_base::app);
+		size_t found;
+
+		
+		//---------------------------- reading the lines of interest
+		string nullfileName = directory;
+		nullfileName.append("/Pass/Nulls.txt");
+		static std::string nullInst;
+		static  std::ifstream nullFile(nullfileName.c_str());
+			
+		
+		if (nullFile.is_open())
+		{
+			while ( !nullFile.eof() )
+			{
+				nullList* nl = new nullList();
+				getline (nullFile,nullInst);
+				found = nullInst.find_first_of(",");
+				nl->variable = nullInst.substr(0,found);
+				llvm::errs()<<nl->variable<<"\n";
+				nl->line = atoi((nullInst.substr(found+1)).c_str());
+				nullInstVector.push_back(nl);
+			}
+			nullFile.close();
+		}
+
+		//----------------------------
+		
+		
+		//---------------------------- reading the structs of interest
+		/*static std::string structInst;
+		static  std::ifstream structFile("Pass/critStructs.txt");
+		
+		
+		if (structFile.is_open())
+		{
+			while ( !structFile.eof() )
+			{
+				getline (structFile,structInst);
+				outFile << structInst << "\n";
+				
+			}
+			structFile.close();
+		}*/
+		
+		//----------------------------
+		
+		
+		//---------------------------- reading the variables of interest
+		static std::string critInst;
+		std::string varName;
+		string critfilename = directory;
+		critfilename.append("/Pass/critInst.txt");
+		static  std::ifstream critFile(critfilename.c_str());
+
+		int funcComp;
+		static Instruction* trackVar;
+
+		
+		if (critFile.is_open())
+		{
+			while ( !critFile.eof() )
+			{
+				getline (critFile,critInst);
+				found = critInst.find_first_of(",");
+				critInstructions *ci = new critInstructions();
+				ci->func = critInst.substr(0,found);
+				ci->variable = critInst.substr(found+1);
+				critInstVector.push_back(ci);
+			
+			}
+			critFile.close();
+		}
+		//----------------------------
+		
+		//---------------------------- reading the aliases
+		string aliasfileName = directory;
+		aliasfileName.append("/LLVM/alias.txt");
+		static  std::ifstream aliasFile(aliasfileName.c_str());
+		std::string aliasLine;	
+		
+		if (aliasFile.is_open())
+		{
+			while ( !aliasFile.eof() )
+			{
+				getline (aliasFile,aliasLine);
+				found = aliasLine.find("[");
+				if(found != std::string::npos)
+				{
+					std::string func;
+					aliasList *al = new aliasList();
+					getline (aliasFile,aliasLine);
+					al->function = aliasLine;
+					
+					getline (aliasFile,aliasLine);
+					int iteration = atoi(aliasLine.c_str());
+					getline (aliasFile,aliasLine);
+					if ((aliasLine.compare("may alias") == 0 && mayAlias > 0) || (aliasLine.compare("must alias") == 0)) {
+						al->aliasType = aliasLine;
+						al->type = 0;
+						while (iteration > 0) {
+							iteration--;
+							getline (aliasFile,aliasLine);
+							
+							size_t index = aliasLine.find(".");
+							if (index != std::string::npos) {
+								aliasLine = aliasLine.substr(0,index);
+							}
+
+							
+							al->aliasVec.push_back(aliasLine);
+							
+
+								for (unsigned int i =0; i < critInstVector.size()-1; i++) {
+									critInstructions* ce1 = (critInstVector.at(i));
+									std::string tempStr = ce1->variable;
+									if(tempStr.compare(aliasLine) == 0 /*&& (ce1->func.compare(al->function) == 0 || ce1->func.compare("globalFUNC") == 0)*/)
+									{
+										al->type = 1;
+										al->origVar.push_back(tempStr);
+
+										func = al->function;
+
+
+									}
+								}
+
+							
+								//check if variable of interest is loaded in it
+								if(aliasLine.find("_rvtool") != std::string::npos)
+								{
+									for(Module::iterator mi = M.begin(), mp = M.end(); mi != mp; ++mi)
+									{
+										Function *F = &*mi;
+										for (Function::iterator fi = F->begin() , fe = F->end(); fi !=fe; ++fi) {
+											BasicBlock *BB = &*fi;
+											for (BasicBlock::iterator bi = BB->begin() , be = BB->end(); bi !=be; ++bi) {
+												Instruction *Inst = &*bi;
+												Value* valInst = &*bi;
+												if (aliasLine.compare(valInst->getName().str()) == 0 && al->function.compare(F->getName().str()) == 0) {
+													int op_counter = 0;
+													for (User::op_iterator op_i = Inst->op_begin(), op_e = Inst->op_end(); op_i != op_e; ++op_i) {
+														op_counter++;
+														Value *v = *op_i;
+														if (v->hasName()) {
+															
+															if (Inst->getOpcode() == 28) {
+																if (op_counter == 2) {
+																	
+																	std::string varName = v->getName().str();
+																	size_t index = varName.find(".");
+																	if (index != std::string::npos) {
+																		varName = varName.substr(0,index);
+																	}
+
+																	for (unsigned int i =0; i < critInstVector.size()-1; i++) {
+																		critInstructions* ce1 = (critInstVector.at(i));
+																		std::string tempStr = ce1->variable;
+																		
+																		if(tempStr.compare(varName) == 0 /*&& (ce1->func.compare(al->function) == 0 || ce1->func.compare("globalFUNC") == 0)*/)
+																		{
+																			al->type = 1;
+																			al->origVar.push_back(tempStr);
+																			
+																			func = al->function;
+																			
+																			
+																		}
+																	}
+																}
+															}
+															else {
+																
+																std::string varName = v->getName().str();
+																size_t index = varName.find(".");
+																if (index != std::string::npos) {
+																	varName = varName.substr(0,index);
+																}
+																for (unsigned int i =0; i < critInstVector.size()-1; i++) {
+																	critInstructions* ce1 = (critInstVector.at(i));
+																	std::string tempStr = ce1->variable;
+																	
+																	if(tempStr.compare(varName) == 0 && validate_ptr_inst(v)/*&& (ce1->func.compare(al->function) == 0 || ce1->func.compare("globalFUNC") == 0)*/)
+																	{
+																		al->type = 1;
+																		al->origVar.push_back(tempStr);
+																		
+																		func = al->function;
+																																				
+																	}
+																}
+															}
+
+														}
+														
+
+														
+													}
+
+												}
+											}
+										}
+										
+									}
+								}
+								
+							
+
+						}
+						if (al->type == 1) {
+							aliasVector.push_back(al);
+							for (unsigned i =0; i < al->aliasVec.size(); i++) {
+								critInstructions* ce1 = new critInstructions();
+								ce1->variable = al->aliasVec.at(i);
+								ce1->func = func;
+								critInstVector.push_back(ce1);
+
+							}
+						}
+						else {
+							delete al;
+						}
+
+						
+						
+					}
+
+					
+				}
+				
+			}
+			aliasFile.close();
+		}
+
+
+		//----------------------------
+		
+		
+		for(Module::iterator mi = M.begin(), mp = M.end(); mi != mp; ++mi)
+		{
+
+			
+			Function *F = &*mi;
+			
+			if(F->getName().str().find("llvm") == std::string::npos)
+			{
+				funcComp = 0;
+				static std::vector<std::string> searchedVar;
+				for (unsigned int i =0; i < critInstVector.size(); i++) {
+					critInstructions* ce1 = (critInstVector.at(i));
+					if(F->getName().str().compare(ce1->func) == 0 || ce1->func.compare("globalFUNC") == 0)
+					{
+						funcComp = 1;
+						searchedVar.push_back(ce1->variable);
+//						llvm::errs()<<ce1->variable<<" YJ \n";
+					}
+				}
+				
+			//	if(funcComp == 1)
+			//	{
+					for (Function::iterator fi = F->begin() , fe = F->end(); fi !=fe; ++fi) {
+						BasicBlock *BB = &*fi;
+						for (BasicBlock::iterator bi = BB->begin() , be = BB->end(); bi !=be; ++bi) {
+							Instruction *Inst = &*bi;
+							
+							if (MDNode *N = Inst->getMetadata("dbg")) {  // Here I is an LLVM instruction
+								DILocation Loc(N);                      // DILocation is in DebugInfo.h
+								unsigned tempLine = Loc.getLineNumber();
+								for (unsigned i=0; i < nullInstVector.size(); i++) {
+									nullList* nl = nullInstVector.at(i);
+									if (tempLine == nl->line) {
+										outFile << F->getName().str() << "," << nl->variable << "," << tempLine << "\n";
+//										llvm::errs()<< F->getName().str() << "," << nl->variable << "," << tempLine << "360\n";
+										break;
+									}
+								}
+
+							}
+							
+
+							llvm::errs() <<"processing " << *Inst <<"\n";
+							if(Inst->getOpcode() == 28)
+							{
+								StoreInst *S = dyn_cast<StoreInst>(Inst);
+// 								llvm::errs()<<(S->getName()) << "\n";
+								int op_counter = 0;
+								int found = 0;
+								for (User::op_iterator op_i = Inst->op_begin(), op_e = Inst->op_end(); op_i != op_e; ++op_i) {
+									op_counter++;
+									Value *v = *op_i;
+									unsigned Line = 0;
+									found = 0;
+									size_t tempSize =0;
+									if (v->hasName()) {
+										tempSize = (v->getName().str()).find("_rvtool");
+										
+										if (tempSize != std::string::npos && op_counter == 2) {
+											varName = v->getName().str();
+											size_t index = varName.find(".");
+											if (index != std::string::npos) {
+												varName = varName.substr(0,index);
+											}
+											for (unsigned int i =0; i < searchedVar.size(); i++) {
+												std::string tempStr = searchedVar.at(i);
+												if(tempStr.compare(varName) == 0 && validate_ptr_inst(S->getPointerOperand()))
+												{
+													found = 1;
+													llvm::errs()<< "found 393 \n";
+													break;
+												}
+											}
+											if (found == 1) {
+												if (MDNode *N = Inst->getMetadata("dbg")) {  // Here I is an LLVM instruction
+													DILocation Loc(N);                      // DILocation is in DebugInfo.h
+													unsigned tempLine = Loc.getLineNumber();
+													int ff = 0;
+													for (unsigned i=0; i < aliasVector.size(); i++) {
+														aliasList* al = (aliasVector.at(i));
+														for (unsigned j = 0; j < al->aliasVec.size(); j++) {
+
+															if (varName.compare(al->aliasVec.at(j)) == 0 && al->function.compare(F->getName().str()) == 0) {
+																ff =1;
+																for (unsigned k =0; k < al->origVar.size(); k++) {
+																	outFile << F->getName().str() << "," << (al->origVar).at(k) << "," << tempLine << "\n";
+//																	llvm::errs()<< F->getName().str() << "," << (al->origVar).at(k) << "," << tempLine << "410\n";
+																}
+																break;
+																
+															}
+														}
+														if (ff == 1) {
+															break;
+														}
+													}
+													
+													if(ff == 0)
+													{
+														outFile << F->getName().str() << "," << varName << "," << tempLine << "\n";
+//														llvm::errs()<<F->getName().str() << "," << varName << "," << tempLine << "424\n";
+													}
+													
+												}
+
+											}
+										}
+									}
+									
+									
+									
+									if (found == 0) {
+										found = 0;
+										if((v->hasName() == false || tempSize != std::string::npos) && op_counter == 2)
+										{
+											llvm::errs()<<"reached here "<<*v<<"\n";
+											if (isa<GEPOperator>(v))
+											{
+												GEPOperator *G = cast<GEPOperator> (v);
+												for (unsigned int i =0; i < searchedVar.size(); i++) {
+													std::string tempStr = searchedVar.at(i);
+													if(tempStr.compare(G->getPointerOperand()->getName()) == 0 )
+													{
+														if(G->hasAllZeroIndices())
+															found = 1;
+														break;
+													}
+													else
+														v = G->getPointerOperand();
+												}
+											}
+
+											if (isa<Instruction>(v))
+											{
+												if (MDNode *N = Inst->getMetadata("dbg")) {  // Here I is an LLVM instruction
+													DILocation Loc(N);                      // DILocation is in DebugInfo.h
+													Line = Loc.getLineNumber();
+												}
+												if (isa<Instruction>(v))
+													trackVar = cast<Instruction> (v);
+												
+
+												unsigned tempLine = 0;
+												if (MDNode *N = trackVar->getMetadata("dbg")) {  // Here I is an LLVM instruction
+													DILocation Loc(N);                      // DILocation is in DebugInfo.h
+													tempLine = Loc.getLineNumber();
+													
+												}
+												
+												while (tempLine == Line) {
+													int temp_counter = 0;
+													
+													for (User::op_iterator temp_i = trackVar->op_begin(), temp_e = trackVar->op_end(); temp_i != temp_e; ++temp_i) {
+														Value *temp_v = *temp_i;
+														temp_counter++;
+														
+														
+														if(trackVar->getOpcode() == 27 || trackVar->getOpcode() == 29)
+														{
+															
+															found = 0;
+															//searchedVar.compare(v->getName().str()) == 0
+															size_t tempSize = 0;
+															if (temp_v->hasName() == true) {
+
+																tempSize = (temp_v->getName().str()).find("_rvtool");
+																
+															}
+															if(temp_v->hasName() == false || tempSize != std::string::npos)
+															{
+																if (isa<Instruction>(temp_v)) {
+																	trackVar = cast<Instruction>(temp_v);
+																	if (MDNode *N = trackVar->getMetadata("dbg")) {  // Here I is an LLVM instruction
+																		DILocation Loc(N);                      // DILocation is in DebugInfo.h
+																		tempLine = Loc.getLineNumber();
+																		
+																	}
+																	
+																}
+																																
+																
+															}
+															else {
+																varName = temp_v->getName().str();
+																size_t index = varName.find(".");
+																if (index != std::string::npos) {
+																	varName = varName.substr(0,index);
+																}
+																for (unsigned int i =0; i < searchedVar.size(); i++) {
+																	std::string tempStr = searchedVar.at(i);
+																	if(tempStr.compare(varName) == 0 && validate_ptr_inst(S->getPointerOperand()))
+																	{
+																		found = 1;
+//																		llvm::errs()<< "found 494 \n";
+																		break;
+																	}
+																}
+																
+																if (found == 1) {
+																	if (MDNode *N = trackVar->getMetadata("dbg")) {  // Here I is an LLVM instruction
+																		DILocation Loc(N);                      // DILocation is in DebugInfo.h
+																		tempLine = Loc.getLineNumber();
+																		outFile << F->getName().str() << "," << varName << "," << Line << "\n";
+//																		llvm::errs()<<F->getName().str() << "," << varName << "," << Line << "507\n";
+																	}
+
+																}
+																tempLine = 0;
+																
+															}
+															break;
+														}
+														else
+														{
+															
+															found = 0;
+															size_t tempSize = (temp_v->getName().str()).find("_rvtool");
+															if((temp_v->hasName() == false || tempSize != std::string::npos) && temp_counter == 2 )
+															{
+																if (isa<Instruction>(temp_v)) {
+																	trackVar = cast<Instruction>(temp_v);
+																	if (MDNode *N = trackVar->getMetadata("dbg")) {  // Here I is an LLVM instruction
+																		DILocation Loc(N);                      // DILocation is in DebugInfo.h
+																		tempLine = Loc.getLineNumber();
+																	}
+																}
+																
+															}
+															else {
+																if (temp_counter == 1) {
+																	//searchedVar.compare(v->getName().str()) == 0
+																	varName = temp_v->getName().str();
+																	size_t index = varName.find(".");
+																	if (index != std::string::npos) {
+																		varName = varName.substr(0,index);
+																	}
+																	for (unsigned int i =0; i < searchedVar.size(); i++) {
+																		std::string tempStr = searchedVar.at(i);
+																		
+																		if(tempStr.compare(varName) == 0 && validate_ptr_inst(S->getPointerOperand()))
+																		{
+																			found = 1;
+//																			llvm::errs()<< "found 542 \n";
+																			break;
+																		}
+																	}
+																	
+																	if (found == 1) {
+																		if (MDNode *N = trackVar->getMetadata("dbg")) {  // Here I is an LLVM instruction
+																			DILocation Loc(N);                      // DILocation is in DebugInfo.h
+																			tempLine = Loc.getLineNumber();
+																			outFile << F->getName().str() << "," << varName << "," << tempLine << "\n";
+//																			llvm::errs()<<F->getName().str() << "," << varName << "," << tempLine << "556\n";
+																		}
+
+																	}
+																	tempLine = 0;
+																}
+																
+															}
+															
+															
+														}
+														
+														
+													}
+												}	
+											}
+											else {
+											}
+
+										
+										}
+										else {
+											if (op_counter == 2) {
+												//searchedVar.compare(v->getName().str()) == 0
+												varName = v->getName().str();
+												size_t index = varName.find(".");
+												if (index != std::string::npos) {
+													varName = varName.substr(0,index);
+												}
+												for (unsigned int i =0; i < searchedVar.size(); i++) {
+													std::string tempStr = searchedVar.at(i);
+													
+													if(tempStr.compare(varName) == 0 && validate_ptr_inst(S->getPointerOperand()))
+													{
+														found = 1;
+//														llvm::errs()<< "found 586 \n";
+														break;
+													}
+												}
+												
+												if (found == 1) {
+													if (MDNode *N = Inst->getMetadata("dbg")) {  // Here I is an LLVM instruction
+														DILocation Loc(N);                      // DILocation is in DebugInfo.h
+														Line = Loc.getLineNumber();
+														
+														int ff = 0;
+														for (unsigned i=0; i < aliasVector.size(); i++) {
+															aliasList* al = (aliasVector.at(i));
+															for (unsigned j = 0; j < al->aliasVec.size(); j++) {
+
+																if (varName.compare(al->aliasVec.at(j)) == 0 && al->function.compare(F->getName().str()) == 0) {
+																	ff =1;
+																	for (unsigned k =0; k < al->origVar.size(); k++) {
+																		outFile << F->getName().str() << "," << (al->origVar).at(k) << "," << Line << "\n";
+//																		llvm::errs()<<outFile << F->getName().str() << "," << (al->origVar).at(k) << "," << Line << "610\n";
+																	}
+																	break;
+																	
+																}
+															}
+															if (ff == 1) {
+																break;
+															}
+														}
+														
+														if(ff == 0)
+														{
+															
+															outFile << F->getName().str() << "," << varName << "," << Line << "\n";
+//															llvm::errs()<<outFile << F->getName().str() << "," << varName << "," << Line << "625\n";
+														}
+													}
+
+												}
+											}
+										}
+									}
+
+								}
+							}
+							
+						}
+					}
+				//}
+				
+			}
+			
+		}
+
+		outFile.close();
+		errs() << ">>>>>>>>>>>>>>> Finish Extracting Lines for Instrumentation\n";
+
+
+		return false;
+    }
+    bool validate_ptr_inst(Value *v)
+    {
+    	return true;
+    }
+    // We don't modify the program, so we preserve all analyses
+    virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+      AU.setPreservesAll();
+    }
+  };
+}
+
+char tool_critinst::ID = 0;
+static RegisterPass<tool_critinst> X("tool_critinst", "finds critical instructions of given input file", false, false);
+

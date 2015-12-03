@@ -1,0 +1,7 @@
+digraph "CFG for 'main' function" {
+	label="CFG for 'main' function";
+
+	Node0x10080a730 [shape=record,label="{entry\n 75--76--77\n,75@2,76@2,77@0\n}"];
+	Node0x10080a730 -> Node0x10080a780;
+	Node0x10080a780 [shape=record,label="{return\n 77--77\n,77@3\n}"];
+}

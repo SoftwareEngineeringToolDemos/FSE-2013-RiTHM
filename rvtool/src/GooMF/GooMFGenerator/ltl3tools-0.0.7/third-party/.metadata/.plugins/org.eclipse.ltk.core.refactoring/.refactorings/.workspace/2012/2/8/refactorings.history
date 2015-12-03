@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename resource &apos;convert_to_rvltl&apos; to &apos;rvltl&apos;" description="Rename resource &apos;convert_to_rvltl&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="/convert_to_rvltl" name="rvltl" stamp="1330101613464" updateReferences="true"/>
+</session>

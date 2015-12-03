@@ -1,0 +1,19 @@
+digraph "CFG for 'fib' function" {
+	label="CFG for 'fib' function";
+	Node0x1008085d0 [shape=record,label="{entry\n 8--12--13\n,8@2,10@4,12@1,13@1\n}"];
+	Node0x1008085d0 -> Node0x100808670;
+	Node0x100808620 [shape=record,label="{bb\n 15--17--18\n,15@3,16@3,17@1,18@3\n}"];
+	Node0x100808620 -> Node0x100808670;
+	Node0x100808670 [shape=record,label="{bb1\n 14--14\n,14@5\n|{<s0>T|<s1>F}}"];
+	Node0x100808670:s0 -> Node0x100808620;
+	Node0x100808670:s1 -> Node0x1008086c0;
+	Node0x1008086c0 [shape=record,label="{bb2\n 23--27\n,23@3,27@4\n}"];
+	Node0x1008086c0 -> Node0x100808710;
+	Node0x100808710 [shape=record,label="{return\n 27--27\n,27@3\n}"];
+}
+digraph "CFG for 'main' function" {
+	label="CFG for 'main' function";
+	Node0x100809ec0 [shape=record,label="{entry\n 32--35--36\n,32@2,34@0,35@1,36@0\n}"];
+	Node0x100809ec0 -> Node0x100809f10;
+	Node0x100809f10 [shape=record,label="{return\n 36--36\n,36@3\n}"];
+}

@@ -1,0 +1,14 @@
+digraph "CFG for 'fabs' function" {
+	label="CFG for 'fabs' function";
+
+	Node0x100814610 [shape=record,label="{entry\n 33--35--37\n,33@2,35@0,37@2\n|{<s0>T|<s1>F}}"];
+	Node0x100814610:s0 -> Node0x100814660;
+	Node0x100814610:s1 -> Node0x1008146b0;
+	Node0x100814660 [shape=record,label="{bb\n 37--37\n,37@4\n}"];
+	Node0x100814660 -> Node0x100814700;
+	Node0x1008146b0 [shape=record,label="{bb1\n 38--38\n,38@5\n}"];
+	Node0x1008146b0 -> Node0x100814700;
+	Node0x100814700 [shape=record,label="{bb2\n 39--39\n,39@6\n}"];
+	Node0x100814700 -> Node0x100814750;
+	Node0x100814750 [shape=record,label="{return\n 39--39\n,39@3\n}"];
+}

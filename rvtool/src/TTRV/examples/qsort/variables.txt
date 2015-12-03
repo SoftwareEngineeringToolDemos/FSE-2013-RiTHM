@@ -1,0 +1,2 @@
+{name = "arr", type = "int", scope="global"},
+{name = "flag", type = "int", scope="local", function="sort"},

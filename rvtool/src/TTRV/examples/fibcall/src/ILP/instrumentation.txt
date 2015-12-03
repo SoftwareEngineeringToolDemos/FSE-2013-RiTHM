@@ -1,0 +1,4 @@
+GOOMF_Header,<#include "/Users/samaneh/Documents/Linux-Monitor/example/fibcall/GOOMFInstrumentor.h"> 
+GOOMF_Init,<initContext();> 
+GOOMF_Dest,<destroyContext();> 
+fib,Fnew,16,< _GOOMF_nextEvent(context,0,(void*)(&Fnew);> 

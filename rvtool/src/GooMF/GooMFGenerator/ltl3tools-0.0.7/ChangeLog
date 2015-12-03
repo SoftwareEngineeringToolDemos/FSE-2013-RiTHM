@@ -1,0 +1,130 @@
+Sat Mar 14 10:53:31 EST 2009  <baueran@gmail.com>
+
+- src/alphabet.ml, src/formulatosymbols.ml: new
+- src/*.ml, src/Makefile: use new files
+
+Tue Feb 17 09:41:44 EST 2009  <baueran@gmail.com>
+
+- Makefile, NEWS, README: release clean-ups
+
+Fri Jan 16 15:52:45 EST 2009  <baueran@gmail.com>
+
+- src/putils.ml:sigma_filter: fix bug that would corrupt output when
+  the proposition in question was a substring of another proposition
+  in sigma
+- src/putils.ml:act_contains: new
+
+Fri Jan 16 12:52:48 EST 2009  <baueran@gmail.com>
+
+- src/*.ml: rewrote almost every function slightly to improve performance
+            (too many little changes to remember or mention - sorry!)
+- src/Makefile: call ocamlopt instead of ocamlc
+
+Wed Jan 14 10:46:23 EST 2009  <baueran@gmail.com>
+
+- src/mutils.ml:remove_doubles: change structure of recursion
+- src/nevertofsm.ml:unfold_*: change structure of recursion
+
+Fri Dec 26 04:24:06 EST 2008  <baueran@gmail.com>
+
+- src/minimise.ml: make marked_states recursive
+
+Thu Dec 25 22:51:01 EST 2008  <baueran@gmail.com>
+
+- src/minimise.ml: fix bug in find_new_marked: add (s1, s2) to marked
+  states rather than the newly found state pairs
+- ChangeLog, NEWS: reflect changes
+
+Thu Dec 25 01:29:08 EST 2008  <baueran@gmail.com>
+
+- Makefile, ChangeLog, NEWS: add release notes
+- src/minimise.ml: add inline documentation
+
+Tue Dec 23 06:19:03 EST 2008  <baueran@gmail.com>
+
+- src/minimise.ml: new
+- src/mutils.ml: add remove_doubles and explanation
+- src/gutils.ml: add explanation
+- src/putils.ml: add explanation
+- src/config.ml: change version number
+- src/fsmcrossprod.ml: use minimise.ml, add -m option
+
+Thu Dec 18 03:29:20 EST 2008  <baueran@gmail.com>
+
+- src/fsmcrossprod.ml: added merge_final function
+
+Tue Aug  5 20:09:55 EST 2008  <baueran@gmail.com>
+
+- README: small update
+
+Wed Jul 23 09:21:31 EST 2008  <baueran@gmail.com>
+
+- src/dot2fsm.ml: moved to src/tmp
+- src/tmp/template.tml: added
+- src/Makefile: reflect change
+
+Tue Jul 22 20:03:51 EST 2008  <baueran@gmail.com>
+
+- src/nevertofsm.ml: added normalise function
+- src/fsmcrossprod.ml: made output conform better with dot-file format
+  specification
+
+Mon Jul 21 10:04:05 EST 2008  <baueran@gmail.com>
+
+- src/dot2fsm.ml: added (not part of main distribution)
+- src/Makefile: reflect new file
+- src/putils.ml: in get_label, replaced extfind deltap "\"];" with
+  extfind deltap "\"]"
+- src/dot.ml: cosmetic clean-ups of parse2
+- src/fsmcrossprod.ml: added a semicolon to transition output,
+  added label attribute to state output
+
+Sun Jul 20 17:24:16 EST 2008  <baueran@gmail.com>
+
+- src/dot.ml: added
+- src/fsmcrossprod.ml: include dot.ml
+
+Thu Jul 17 13:37:32 EST 2008  <baueran@gmail.com>
+
+- README: updated installation instructions
+- Makefile: changed dist target
+
+Wed Jul 16 19:51:56 EST 2008  <baueran@gmail.com>
+
+- src/gutils.ml: fixed bug mentioned in previous commit message
+
+Wed Jul 16 19:37:39 EST 2008  <baueran@gmail.com>
+
+- src/gutils.ml: documented bug for has_path in inline documentation, but
+  did not provide fix for it, yet
+
+Wed Jul 16 16:37:26 EST 2008  <baueran@gmail.com>
+
+- src/neverl.mll: glob comments
+- src/neverp.mly: remove rule for dealing with comments
+
+Sat Jul 12 16:37:06 EST 2008  <baueran@gmail.com>
+
+- src/neverl.mll: add support for '_' in tokens
+
+Sat Jul 12 16:13:43 EST 2008  <baueran@gmail.com>
+
+- src/Makfile: added doc target
+- src/ocamlweb.sty: ocamlweb style file added
+- src/fsmcrossprod: updated inline documentation
+
+Fri Jul 11 11:15:20 EST 2008  <baueran@gmail.com>
+
+- Makefile: updated version from 0.0.2 to 0.0.3
+- src/config.ml: updated version from 0.0.2 to 0.0.3
+- src/fsmcrossprod.ml: changed help text
+
+Thu Jul 10 13:18:08 EST 2008  <baueran@gmail.com>
+
+- NEWS: added
+- ChangeLog: added
+- src/neverl.mll: switched off print_char statement that would print
+  unmatched characters and confuse the parser.
+- src/config.ml: updated version from 0.0.1 to 0.0.2
+- src/fsmcrossprod.ml: added -c option for colouring states
+

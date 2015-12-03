@@ -1,0 +1,21 @@
+rand
+log
+fabs
+sqrt
+->63::fabs
+sin
+->90::fabs
+gaussian
+->111::rand
+->112::rand
+->117::rand
+->118::rand
+->125::  %4 = call float (...)* bitcast (float (double)* @log to float (...)*)(double %_rvtool44) nounwind, !dbg !63
+->125::  %5 = call float (...)* bitcast (float (double)* @sqrt to float (...)*)(double %_rvtool48) nounwind, !dbg !63
+main
+->148::  %0 = call float (...)* bitcast (float (double)* @sqrt to float (...)*)(double 2.000000e+00) nounwind, !dbg !52
+->149::  %1 = call float (...)* bitcast (float (double)* @sqrt to float (...)*)(double 1.200000e+01) nounwind, !dbg !53
+->152::  %2 = call float (...)* bitcast (float (double)* @sin to float (...)*)(double %_rvtool8) nounwind, !dbg !56
+->152::gaussian
+->160::lms
+lms

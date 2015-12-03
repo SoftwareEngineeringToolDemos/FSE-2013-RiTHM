@@ -1,0 +1,29 @@
+digraph "CFG for 'binary_search' function" {
+	label="CFG for 'binary_search' function";
+	Node0x24c7e40 [shape=record,label="{entry\n 78--85--86\n,78@2,80@1,83@0,84@0,85@0,86@0\n}"];
+	Node0x24c7e40 -> Node0x24c7ea0;
+	Node0x24c7ea0 [shape=record,label="{while.cond\n 86--86\n,86@5\n|{<s0>T|<s1>F}}"];
+	Node0x24c7ea0:s0 -> Node0x24c7f00;
+	Node0x24c7ea0:s1 -> Node0x24e7f30;
+	Node0x24c7f00 [shape=record,label="{while.body\n 87--88\n,87@6,88@7\n|{<s0>T|<s1>F}}"];
+	Node0x24c7f00:s0 -> Node0x24c7f60;
+	Node0x24c7f00:s1 -> Node0x24c7fc0;
+	Node0x24c7f60 [shape=record,label="{if.then\n 89--90--94\n,89@4,90@5,94@0\n}"];
+	Node0x24c7f60 -> Node0x24e7ed0;
+	Node0x24c7fc0 [shape=record,label="{if.else\n 96--96\n,96@9\n|{<s0>T|<s1>F}}"];
+	Node0x24c7fc0:s0 -> Node0x24c8020;
+	Node0x24c7fc0:s1 -> Node0x24c8080;
+	Node0x24c8020 [shape=record,label="{if.then8\n 97--101\n,97@4,101@0\n}"];
+	Node0x24c8020 -> Node0x24e7e70;
+	Node0x24c8080 [shape=record,label="{if.else10\n 103--103\n,103@4\n}"];
+	Node0x24c8080 -> Node0x24e7e70;
+	Node0x24e7e70 [shape=record,label="{if.end\n --\n,@1\n}"];
+	Node0x24e7e70 -> Node0x24e7ed0;
+	Node0x24e7ed0 [shape=record,label="{if.end12\n 111--111\n,111@2\n}"];
+	Node0x24e7ed0 -> Node0x24c7ea0;
+	Node0x24e7f30 [shape=record,label="{while.end\n 115--115\n,115@3\n}"];
+}
+digraph "CFG for 'main' function" {
+	label="CFG for 'main' function";
+	Node0x24c4ca0 [shape=record,label="{entry\n 75--76\n,75@2,76@0\n}"];
+}

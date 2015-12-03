@@ -1,0 +1,15 @@
+v,10,main,9,11
+v,11,main,12,12
+v,12,main,13,14
+v,13,main,28,29
+v,14,main,30,31
+v,-1,main,0,0
+v,-2,main,0,0
+e,10,11,1:MainPath > 9,11,:SidePaths > 
+e,11,12,13:MainPath > 12,12,:SidePaths > 
+e,12,13,32:MainPath > 9,14,15,15,19,19,23,23,:SidePaths > 
+e,12,-2,15:MainPath > 9,14,15,15,41,41,41,41,:SidePaths > 
+e,13,13,40:MainPath > 28,31,23,23,:SidePaths > 0=28,31,23,23,36,36,15,15,19,19,23,23,weight=65:
+e,13,14,8:MainPath > 28,29,:SidePaths > 
+e,14,-2,34:MainPath > 28,31,23,23,36,36,15,15,41,41,41,41,:SidePaths > 
+e,-1,10,6:MainPath > 9,9,:SidePaths > 

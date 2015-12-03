@@ -1,0 +1,2 @@
+{name = "Fnew", type = "int", scope="local", function="fib"},
+{name = "Fold", type = "int", scope="local", function="fib"},

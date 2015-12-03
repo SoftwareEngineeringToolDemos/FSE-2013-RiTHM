@@ -1,0 +1,11 @@
+v,2,main,16,21
+v,6,main,7,8
+v,7,main,9,14
+v,-1,main,0,0
+v,-2,main,0,0
+e,2,2,16:MainPath > 16,21,14,14,:SidePaths > 
+e,2,-2,14:MainPath > 16,21,14,14,23,27,:SidePaths > 
+e,6,7,1:MainPath > 7,8,:SidePaths > 
+e,7,2,14:MainPath > 7,14,14,14,:SidePaths > 
+e,7,-2,12:MainPath > 7,14,14,14,23,27,:SidePaths > 
+e,-1,6,6:MainPath > 7,7,:SidePaths > 

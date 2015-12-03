@@ -1,0 +1,26 @@
+[g0] 
+icrc
+13
+may alias
+init.1491
+_rvtool11
+_rvtool18
+_rvtool27
+_rvtool31
+_rvtool54
+_rvtool61
+_rvtool72
+_rvtool76
+_rvtool86
+_rvtool96
+_rvtool118
+_rvtool125
+
+[g1] 
+main
+3
+may alias
+_rvtool3
+_rvtool10
+_rvtool15
+

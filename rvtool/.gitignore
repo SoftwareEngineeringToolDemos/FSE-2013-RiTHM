@@ -1,0 +1,16 @@
+.DS_Store
+.svn*
+*~
+*.swp
+*.o
+doc/*.aux
+doc/*.lof
+doc/*.log
+doc/*.lot
+doc/*.out
+doc/*.toc
+src/java/*.jar
+src/java/bin/*
+build/
+test/example
+src/frontend/gui/Makefile

@@ -1,0 +1,4 @@
+GOOMF_Header,<#include "/Users/samaneh/Documents/Linux-Monitor/example/insertsort/GOOMFInstrumentor.h"> 
+GOOMF_Init,<initContext();> 
+GOOMF_Dest,<destroyContext();> 
+main,a,11,< _GOOMF_nextEvent(context,0,(void*)(&a);> 

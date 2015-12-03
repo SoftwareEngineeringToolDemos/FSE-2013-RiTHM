@@ -1,0 +1,7 @@
+GOOMF_Header,<#include "GOOMFInstrumentor.h"> 
+GOOMF_Init,<//initContext();> 
+GOOMF_Dest,<//destroyContext();> 
+main,main_n,8,< _GOOMF_nextEvent(context,1,(void*)(&main_n));> 
+main,main_i,8,< _GOOMF_nextEvent(context,0,(void*)(&main_i));> 
+main,main_n,12,< _GOOMF_nextEvent(context,1,(void*)(&main_n));> 
+main,main_i,12,< _GOOMF_nextEvent(context,0,(void*)(&main_i));> 

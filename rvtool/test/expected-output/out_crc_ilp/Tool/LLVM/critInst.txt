@@ -1,0 +1,1 @@
+globalFUNC,icrc1_i

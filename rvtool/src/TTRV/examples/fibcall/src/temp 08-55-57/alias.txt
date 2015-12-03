@@ -1,0 +1,15 @@
+Alias Set Tracker: 8 alias sets for 8 pointer values.
+  AliasSet[0x10080c0f0, 1] must alias, Mod/Ref   Pointers: (i32* %n_addr, 4)
+  AliasSet[0x10080c150, 1] must alias, Mod/Ref   Pointers: (i32* %Fnew, 4)
+  AliasSet[0x10080c1b0, 1] must alias, Mod/Ref   Pointers: (i32* %Fold, 4)
+  AliasSet[0x10080c240, 1] must alias, Mod/Ref   Pointers: (i32* %i, 4)
+  AliasSet[0x10080c2d0, 1] must alias, Mod/Ref   Pointers: (i32* %temp, 4)
+  AliasSet[0x10080c360, 1] must alias, Mod/Ref   Pointers: (i32* %ans, 4)
+  AliasSet[0x10080c3f0, 1] must alias, Mod/Ref   Pointers: (i32* %_rvtool, 4)
+  AliasSet[0x10080c480, 1] must alias, Mod/Ref   Pointers: (i32* %retval, 4)
+
+Alias Set Tracker: 3 alias sets for 2 pointer values.
+  AliasSet[0x100804cc0, 1] must alias, Mod/Ref   Pointers: (i32* %a, 4)
+  AliasSet[0x10080c260, 0] may alias, Mod/Ref   
+    1 Call Sites: i32 %0
+  AliasSet[0x10080c2f0, 1] must alias, Ref       Pointers: (i32* %retval, 4)

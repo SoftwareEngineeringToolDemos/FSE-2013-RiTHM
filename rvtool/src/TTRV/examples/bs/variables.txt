@@ -1,0 +1,3 @@
+{name = "binary_search_up", type = "int", scope="local", function="binary_search"},
+{name = "binary_search_fvalue", type = "int", scope="local", function="binary_search"},
+{name = "binary_search_low", type = "int", scope="local", function="binary_search"},

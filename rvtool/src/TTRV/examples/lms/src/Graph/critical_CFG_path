@@ -1,0 +1,59 @@
+v,48,sqrt,55,55
+v,51,sqrt,60,63
+v,54,sqrt,66,66
+v,61,sqrt,43,45
+v,62,sqrt,46,55
+v,-1,fabs,0,0
+v,-2,fabs,0,0
+v,-3,gaussian,0,0
+v,-4,gaussian,0,0
+v,-5,lms,0,0
+v,-6,lms,0,0
+v,-7,log,0,0
+v,-8,log,0,0
+v,-9,main,0,0
+v,-10,main,0,0
+v,-11,rand,0,0
+v,-12,rand,0,0
+v,-13,sin,0,0
+v,-14,sin,0,0
+v,-15,sqrt,0,0
+v,-16,sqrt,0,0
+e,48,-16,12:MainPath > 55,55,69,69,69,69,:SidePaths > 
+e,51,-1,15:MainPath > :SidePaths > 
+e,54,51,30:MainPath > 66,66,57,57,57,57,59,59,:SidePaths > 
+e,54,54,17:MainPath > 66,66,57,57,57,57,59,59,:SidePaths > 
+e,54,-16,22:MainPath > 66,66,57,57,57,57,69,69,69,69,:SidePaths > 
+e,61,62,9:MainPath > 43,45,:SidePaths > 
+e,62,48,2:MainPath > 43,55,:SidePaths > 
+e,62,51,26:MainPath > 43,55,57,57,57,57,59,59,:SidePaths > 
+e,62,54,13:MainPath > 43,55,57,57,57,57,59,59,:SidePaths > 
+e,62,-16,18:MainPath > 43,55,57,57,57,57,69,69,69,69,:SidePaths > 
+e,-1,-2,19:MainPath > 33,33,33,37,37,37,39,39,39,39,:SidePaths > 0=33,33,33,37,38,38,39,39,39,39,weight=20:
+e,-2,-1,3:MainPath > :SidePaths > 0=weight=0:1=weight=0:2=91,94,weight=25:
+e,-2,51,27:MainPath > 57,57,57,57,59,59,:SidePaths > 
+e,-2,54,14:MainPath > 57,57,57,57,59,59,:SidePaths > 
+e,-2,-16,19:MainPath > 57,57,57,57,69,69,69,69,:SidePaths > 
+e,-2,-14,10:MainPath > 97,97,97,97,:SidePaths > 
+e,-3,-11,15:MainPath > 106,106,106,110,:SidePaths > 
+e,-3,-4,22:MainPath > 106,106,106,110,132,133,136,136,136,136,:SidePaths > 
+e,-5,-6,66:MainPath > 182,182,182,197,197,197,201,208,208,208,211,211,211,211,214,214,214,214,:SidePaths > 
+e,-6,-5,20:MainPath > 159,159,:SidePaths > 
+e,-6,-10,16:MainPath > 159,159,164,164,164,164,:SidePaths > 
+e,-7,-8,9:MainPath > 28,28,28,30,30,30,:SidePaths > 
+e,-8,-4,17:MainPath > 136,136,136,136,:SidePaths > 
+e,-9,-15,9:MainPath > 144,144,:SidePaths > 
+e,-11,-12,16:MainPath > 23,23,23,24,24,24,:SidePaths > 
+e,-12,-11,29:MainPath > 116,116,:SidePaths > 0=116,116,weight=4:
+e,-12,-7,33:MainPath > 116,116,:SidePaths > 0=116,116,weight=4:
+e,-12,-15,33:MainPath > 116,116,:SidePaths > 0=116,116,weight=4:
+e,-13,-1,53:MainPath > 74,74,74,79,81,81,81,81,83,83,85,89,:SidePaths > 
+e,-14,-13,25:MainPath > 151,151,:SidePaths > 
+e,-14,-3,25:MainPath > 151,151,:SidePaths > 
+e,-14,-5,26:MainPath > 151,151,156,159,159,159,:SidePaths > 
+e,-14,-10,22:MainPath > 151,151,156,159,159,159,164,164,164,164,:SidePaths > 
+e,-15,61,3:MainPath > 43,43,:SidePaths > 
+e,-16,-13,31:MainPath > 151,151,:SidePaths > 
+e,-16,-3,31:MainPath > 151,151,:SidePaths > 
+e,-16,-5,32:MainPath > 151,151,156,159,159,159,:SidePaths > 
+e,-16,-10,28:MainPath > 151,151,156,159,159,159,164,164,164,164,:SidePaths > 

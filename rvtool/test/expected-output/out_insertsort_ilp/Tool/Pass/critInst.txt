@@ -1,0 +1,2 @@
+globalFUNC,main_j
+globalFUNC,main_i

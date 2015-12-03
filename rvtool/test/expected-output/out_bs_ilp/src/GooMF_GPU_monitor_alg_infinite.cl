@@ -1,0 +1,125 @@
+#define VARS_IN_STATE		(2)
+
+typedef struct{
+	int low;
+	int up;
+} program_state_struct;
+
+typedef struct{
+	int dummy;
+} used_params_struct;
+//saving state in char: first 6 bits state and last 2 bits type
+typedef unsigned char fsm_state;
+
+bool ifStateConclusive(fsm_state state)
+{
+	if ((state ^ 0x00) == 0 || (state ^ 0x03) == 0)
+		return true;
+	return false;
+}
+
+bool compareNames(char* str1, __constant char* str2)
+{
+	int i = 0;
+	while (str1[i] != '\0' && str2[i] != '\0')
+	{
+		if (str1[i] != str2[i])
+			return false;
+		++i;
+	}
+	if (str1[i] != str2[i])
+		return false;
+	return true;
+}
+
+void copyProgramState(program_state_struct* ps1, const __global program_state_struct* ps2)
+{
+	if (ps1 == 0 || ps2 == 0)
+		return;
+	
+	ps1->low = ps2->low;
+	ps1->up = ps2->up;
+}
+
+
+
+unsigned int getStateOrder(unsigned int num_of_prop, fsm_state s)
+{
+	if (num_of_prop == 0 && s == 5) return 0;
+	if (num_of_prop == 0 && s == 3) return 1;
+
+	return 0;
+}
+
+fsm_state getStateID(unsigned int num_of_prop, unsigned int o)
+{
+	if (num_of_prop == 0 && o == 0) return 5;
+	if (num_of_prop == 0 && o == 1) return 3;
+
+	return 0;
+}
+void transition0(bool a, fsm_state input_state, __global fsm_state* output_state)
+{	//property "[] (a)"
+
+	//transition branches
+	if( input_state == 5 && ( a ))
+		*output_state = 5;
+	if( input_state == 5 && ( ! a ))
+		*output_state = 3;
+	if( input_state == 3 && ( a ))
+		*output_state = 3;
+	if( input_state == 3 && ( ! a ))
+		*output_state = 3;
+	else return;
+}
+
+
+//kernel code
+__kernel void verification(__global program_state_struct const * restrict input_buffer,
+				__global fsm_state *output_buffer,
+				__global fsm_state *current_state,
+				__global uint *cur_index,
+				__global uint *num_of_transitions,
+				__global used_params_struct* used_params,
+				uint nitems_global) 
+{ 
+
+	uint nitems = nitems_global;
+	int global_id = get_global_id(0);
+	int work_per_thread = nitems / get_global_size(0);
+
+	program_state_struct temp_program_state;
+	fsm_state temp_fsm_state;
+	unsigned int pred_value = 0;
+	
+	int low;
+	int up;
+
+	bool a;
+
+
+	//property "[] (a)"
+prop0: 
+	if (global_id + work_per_thread <= cur_index[0]) 
+		goto prop1;
+
+	temp_fsm_state = current_state[0];
+
+	//translation from work-item units to actual data
+	for (int j=(global_id*work_per_thread); j<((global_id+1)*work_per_thread); ++j)
+	{
+		copyProgramState(&temp_program_state, &input_buffer[j]);
+
+		low = temp_program_state.low;
+		up = temp_program_state.up;
+
+		a = (low <= up);
+
+		transition0(a, 5, &(output_buffer[nitems*0 + 0 + j*1]));
+	}
+
+prop1:
+
+
+	return;
+}

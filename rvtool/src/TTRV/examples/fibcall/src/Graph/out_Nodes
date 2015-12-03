@@ -1,0 +1,7 @@
+v,fib,0,Node0x1008085d0,entry,8,13,8
+v,fib,1,Node0x100808620,bb,15,18,10
+v,fib,2,Node0x100808670,bb1,14,14,5
+v,fib,3,Node0x1008086c0,bb2,23,27,7
+v,fib,4,Node0x100808710,return,27,27,3
+v,main,5,Node0x100809ec0,entry,32,36,5
+v,main,6,Node0x100809f10,return,36,36,3

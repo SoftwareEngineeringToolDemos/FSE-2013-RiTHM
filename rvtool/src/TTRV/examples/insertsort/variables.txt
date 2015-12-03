@@ -1,0 +1,2 @@
+{name = "a", type = "int", scope="local", function="main"},
+{name = "temp", type = "int", scope="local", function="main"},

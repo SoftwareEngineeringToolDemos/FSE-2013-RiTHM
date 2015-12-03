@@ -1,0 +1,813 @@
+Index: tools/Makefile
+===================================================================
+--- tools/Makefile	(revision 162997)
++++ tools/Makefile	(working copy)
+@@ -12,7 +12,7 @@
+ include $(CLANG_LEVEL)/../../Makefile.config
+ 
+ DIRS := driver libclang c-index-test arcmt-test c-arcmt-test diagtool \
+-        clang-check
++        clang-check auto-instrument
+ 
+ # Recurse into the extra repository of tools if present.
+ OPTIONAL_DIRS := extra
+Index: tools/auto-instrument/InstrumentASTVisitor.h
+===================================================================
+--- tools/auto-instrument/InstrumentASTVisitor.h	(revision 0)
++++ tools/auto-instrument/InstrumentASTVisitor.h	(revision 0)
+@@ -0,0 +1,54 @@
++#ifndef INSTRUMENTASTVISITOR_H
++#define INSTRUMENTASTVISITOR_H
++
++#include "clang/AST/ParentMap.h"
++#include "clang/AST/RecursiveASTVisitor.h"
++#include "clang/AST/Stmt.h"
++#include "clang/Rewrite/Rewriter.h"
++
++#include <string>
++#include <map>
++
++using namespace clang;
++using namespace std;
++
++class InstrumentASTVisitor : public RecursiveASTVisitor<InstrumentASTVisitor> {
++public:
++	InstrumentASTVisitor(Rewriter &R, char *filepath);
++
++	bool VisitDeclStmt(DeclStmt *declStmt);
++	bool VisitBinaryOperator(BinaryOperator *bop);
++	bool VisitUnaryOperator(UnaryOperator *uop);
++	bool VisitReturnStmt(ReturnStmt *rstmt);
++	bool VisitFunctionDecl(FunctionDecl *f);
++
++	string getHeaderSnippet();
++
++private:
++	Rewriter &rewriter;
++	ParentMap *fnMap;
++	map<int,string> instrumentLocationsMap;
++	map<int,string> instrumentationMap;
++	string headerSnippet;
++	string initSnippet;
++	string endSnippet;
++	bool inMain;
++
++	static const string KEY_HEADER;
++	static const string KEY_INIT;
++	static const string KEY_END;
++
++	struct LocationTuple {
++		unsigned line1;
++		unsigned col1;
++		unsigned line2;
++		unsigned col2;
++	};
++
++	LocationTuple getLocTuple(Stmt *s);
++	void checkAndInstrument(Stmt *stmt, Stmt *subExpr, string varName);
++	void insertInstrumentation(unsigned lineNum, string varName, Stmt *s);
++	string getSourceRangeAsString(SourceRange range);
++};
++
++#endif /* INSTRUMENTASTVISITOR_H */
+Index: tools/auto-instrument/InsertBracesASTConsumer.cpp
+===================================================================
+--- tools/auto-instrument/InsertBracesASTConsumer.cpp	(revision 0)
++++ tools/auto-instrument/InsertBracesASTConsumer.cpp	(revision 0)
+@@ -0,0 +1,15 @@
++#include "InsertBracesASTConsumer.h"
++
++using namespace clang;
++
++InsertBracesASTConsumer::InsertBracesASTConsumer(Rewriter &rewriter)
++	: visitor(rewriter) {}
++
++bool InsertBracesASTConsumer::HandleTopLevelDecl(DeclGroupRef dgRef) {
++	for (DeclGroupRef::iterator b = dgRef.begin(), e = dgRef.end();
++			b != e;
++			++b) {
++		visitor.TraverseDecl(*b);
++	}
++	return true;
++}
+Index: tools/auto-instrument/AutoInstrumenter.cpp
+===================================================================
+--- tools/auto-instrument/AutoInstrumenter.cpp	(revision 0)
++++ tools/auto-instrument/AutoInstrumenter.cpp	(revision 0)
+@@ -0,0 +1,101 @@
++#include <fstream>
++
++#include "clang/Frontend/CompilerInstance.h"
++#include "clang/Frontend/FrontendActions.h"
++#include "clang/Frontend/FrontendAction.h"
++#include "clang/Lex/Lexer.h"
++#include "clang/Parse/ParseAST.h"
++#include "clang/Rewrite/Rewriter.h"
++#include "clang/Tooling/CommonOptionsParser.h"
++#include "clang/Tooling/Tooling.h"
++
++#include "llvm/Support/CommandLine.h"
++#include "llvm/Support/Host.h"
++
++#include "InsertBracesASTVisitor.h"
++#include "InsertBracesASTConsumer.h"
++#include "InstrumentASTVisitor.h"
++#include "InstrumentASTConsumer.h"
++
++using namespace clang;
++using namespace clang::tooling;
++using namespace llvm;
++using namespace std;
++
++// CommonOptionsParser declares HelpMessage with a description of the common
++// command-line options related to the compilation database and input files.
++// It's nice to have this help message in all tools.
++static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
++
++// A help message for this specific tool can be added afterwards.
++static cl::extrahelp MoreHelp("\nMore help text...");
++
++enum RewriteMode { INSERT_BRACES, INSTRUMENT };
++
++string rewriteSourceCode(const char *filepath, RewriteMode mode, void *args = NULL) {
++	CompilerInstance compilerInstance;
++	compilerInstance.createDiagnostics(0,0);
++
++	//init target info with the default triple for our platform
++	TargetOptions targetOptions;
++	targetOptions.Triple = sys::getDefaultTargetTriple();
++	TargetInfo *targetInfo = TargetInfo::CreateTargetInfo(compilerInstance.getDiagnostics(), targetOptions);
++	compilerInstance.setTarget(targetInfo);
++
++	compilerInstance.createFileManager();
++	FileManager &fileManager = compilerInstance.getFileManager();
++	compilerInstance.createSourceManager(fileManager);
++	SourceManager &sourceManager = compilerInstance.getSourceManager();
++	compilerInstance.createPreprocessor();
++	compilerInstance.createASTContext();
++
++	//rewriter
++	Rewriter rewriter;
++	rewriter.setSourceMgr(sourceManager, compilerInstance.getLangOpts());
++
++	//set the main file handled by the source manager to the input file
++	sourceManager.createMainFileID(fileManager.getFile(filepath));
++	compilerInstance.getDiagnosticClient().BeginSourceFile(compilerInstance.getLangOpts(), &compilerInstance.getPreprocessor());
++
++	ASTConsumer *consumer;
++
++	switch (mode) {
++		case INSERT_BRACES:
++			consumer = new InsertBracesASTConsumer(rewriter);
++			break;
++		case INSTRUMENT:
++			consumer = new InstrumentASTConsumer(rewriter, (char *)args);
++			break;
++		default:
++			errs() << "Error: Rewrite mode not recognized!\n";
++			return string();
++	}
++
++	ParseAST(compilerInstance.getPreprocessor(), consumer, compilerInstance.getASTContext());
++	delete consumer;
++
++	const RewriteBuffer *rewriteBuffer = rewriter.getRewriteBufferFor(sourceManager.getMainFileID());
++	if (mode == INSTRUMENT) {
++		return ((InstrumentASTConsumer *)consumer)->getHeaderSnippet() + "\n\n" + string(rewriteBuffer->begin(), rewriteBuffer->end());
++	}
++	
++	return string(rewriteBuffer->begin(), rewriteBuffer->end());
++}
++
++int main(int argc, char *argv[]) {
++	if (argc != 3) {
++		errs() << "Usage: auto-instrument <filename> <instrumentation scheme>\n";
++		return 1;
++	}
++
++	string filePath(argv[1]);
++	filePath += ".inst.c";
++
++	ofstream instFile;
++	instFile.open(filePath.c_str());
++	instFile << rewriteSourceCode(argv[1], INSERT_BRACES);
++	instFile.close();
++
++	outs() << rewriteSourceCode(filePath.c_str(), INSTRUMENT, (void *)argv[2]);
++	return 0;
++}
+Index: tools/auto-instrument/CMakeLists.txt
+===================================================================
+--- tools/auto-instrument/CMakeLists.txt	(revision 0)
++++ tools/auto-instrument/CMakeLists.txt	(revision 0)
+@@ -0,0 +1,22 @@
++set(LLVM_LINK_COMPONENTS
++  ${LLVM_TARGETS_TO_BUILD}
++  asmparser
++  support
++  mc
++  )
++
++add_clang_executable(auto-instrument
++  AutoInstrumenter.cpp
++  InsertBracesASTVisitor.cpp
++  InsertBracesASTConsumer.cpp
++  InstrumentASTVisitor.cpp
++  InstrumentASTConsumer.cpp
++  )
++
++target_link_libraries(auto-instrument
++  clangTooling
++  clangBasic
++  )
++
++install(TARGETS auto-instrument
++  RUNTIME DESTINATION bin)
+Index: tools/auto-instrument/Makefile
+===================================================================
+--- tools/auto-instrument/Makefile	(revision 0)
++++ tools/auto-instrument/Makefile	(revision 0)
+@@ -0,0 +1,24 @@
++##===- tools/clang-check/Makefile --------------------------*- Makefile -*-===##
++#
++#                     The LLVM Compiler Infrastructure
++#
++# This file is distributed under the University of Illinois Open Source
++# License. See LICENSE.TXT for details.
++#
++##===----------------------------------------------------------------------===##
++
++CLANG_LEVEL := ../..
++
++TOOLNAME = auto-instrument
++
++# No plugins, optimize startup time.
++TOOL_NO_EXPORTS = 1
++
++include $(CLANG_LEVEL)/../../Makefile.config
++LINK_COMPONENTS := $(TARGETS_TO_BUILD) asmparser support mc
++USEDLIBS = clangFrontend.a clangSerialization.a clangDriver.a \
++           clangTooling.a clangParse.a clangSema.a clangAnalysis.a \
++           clangRewrite.a clangEdit.a clangAST.a clangLex.a clangBasic.a
++
++include $(CLANG_LEVEL)/Makefile
++
+Index: tools/auto-instrument/InsertBracesASTVisitor.cpp
+===================================================================
+--- tools/auto-instrument/InsertBracesASTVisitor.cpp	(revision 0)
++++ tools/auto-instrument/InsertBracesASTVisitor.cpp	(revision 0)
+@@ -0,0 +1,55 @@
++#include "InsertBracesASTVisitor.h"
++#include "clang/Lex/Lexer.h"
++
++using namespace clang;
++using namespace llvm;
++
++InsertBracesASTVisitor::InsertBracesASTVisitor(Rewriter &R)
++		: rewriter(R) {}
++
++bool InsertBracesASTVisitor::VisitIfStmt(IfStmt *ifstmt) {
++	if (ifstmt->getThen() && !isa<CompoundStmt>(ifstmt->getThen())) {
++		InsertBracesAroundStmt(ifstmt->getThen()->getSourceRange());
++	}
++
++	if (ifstmt->getElse() && !isa<CompoundStmt>(ifstmt->getElse())) {
++		InsertBracesAroundStmt(ifstmt->getElse()->getSourceRange());
++	} 
++	return true;
++}
++
++bool InsertBracesASTVisitor::VisitWhileStmt(WhileStmt *whilestmt) {
++	if (!isa<CompoundStmt>(whilestmt->getBody())) {
++		InsertBracesAroundStmt(whilestmt->getBody()->getSourceRange());
++	}
++	return true;
++}
++
++bool InsertBracesASTVisitor::VisitForStmt(ForStmt *forstmt) {
++	if (!isa<CompoundStmt>(forstmt->getBody())) {
++		InsertBracesAroundStmt(forstmt->getBody()->getSourceRange());
++	}
++	return true;
++}
++
++void InsertBracesASTVisitor::InsertBracesAroundStmt(SourceRange range) {
++	SourceLocation eLoc = Lexer::findLocationAfterToken(
++		range.getEnd(),
++		tok::semi, 
++		rewriter.getSourceMgr(), 
++		rewriter.getLangOpts(), 
++		false);
++	if (eLoc.isInvalid()) {
++		errs() << "WARNING: Invalid location for brace insertion!\n";
++		return;
++	}
++
++	rewriter.InsertText(range.getBegin(), "{", true, true);
++	// SourceLocation eLoc = Lexer::getLocForEndOfToken(
++	// 		Lexer::getLocForEndOfToken(range.getEnd(),0, rewriter.getSourceMgr(), rewriter.getLangOpts()),
++	// 		0,
++	// 		rewriter.getSourceMgr(), 
++	// 		rewriter.getLangOpts()
++	// 	);
++	rewriter.InsertText(eLoc, "}", true, true);
++}
+Index: tools/auto-instrument/InstrumentASTConsumer.cpp
+===================================================================
+--- tools/auto-instrument/InstrumentASTConsumer.cpp	(revision 0)
++++ tools/auto-instrument/InstrumentASTConsumer.cpp	(revision 0)
+@@ -0,0 +1,21 @@
++#include "InstrumentASTConsumer.h"
++
++using namespace clang;
++using namespace std;
++
++InstrumentASTConsumer::InstrumentASTConsumer(Rewriter &rewriter, char *filepath)
++	: visitor(rewriter, filepath) {}
++
++// gets called for each parsed top-level declaration
++bool InstrumentASTConsumer::HandleTopLevelDecl(DeclGroupRef DR) {
++	for (DeclGroupRef::iterator b = DR.begin(), e = DR.end();
++			b != e;
++			++b) {
++		visitor.TraverseDecl(*b);
++	}
++	return true;
++}
++
++string InstrumentASTConsumer::getHeaderSnippet() {
++	return visitor.getHeaderSnippet();
++}
+Index: tools/auto-instrument/InsertBracesASTConsumer.h
+===================================================================
+--- tools/auto-instrument/InsertBracesASTConsumer.h	(revision 0)
++++ tools/auto-instrument/InsertBracesASTConsumer.h	(revision 0)
+@@ -0,0 +1,23 @@
++#ifndef INSERTBRACESASTCONSUMER_H
++#define INSERTBRACESASTCONSUMER_H
++
++#include "clang/AST/ASTConsumer.h"
++#include "clang/AST/DeclGroup.h"
++#include "clang/Rewrite/Rewriter.h"
++
++#include "InsertBracesASTVisitor.h"
++
++using namespace clang;
++
++class InsertBracesASTConsumer : public ASTConsumer {
++public:
++	InsertBracesASTConsumer(Rewriter &rewriter);
++
++	// gets called for each parsed top-level declaration
++	virtual bool HandleTopLevelDecl(clang::DeclGroupRef dgRef);
++
++private:
++	InsertBracesASTVisitor visitor;
++};
++
++#endif /* INSERTBRACESASTCONSUMER_H */
+Index: tools/auto-instrument/InstrumentASTVisitor.cpp
+===================================================================
+--- tools/auto-instrument/InstrumentASTVisitor.cpp	(revision 0)
++++ tools/auto-instrument/InstrumentASTVisitor.cpp	(revision 0)
+@@ -0,0 +1,375 @@
++#include "InstrumentASTVisitor.h"
++
++#include <sstream>
++#include <fstream>
++
++#include "clang/Basic/SourceManager.h"
++#include "clang/Lex/Lexer.h"
++
++using namespace clang;
++using namespace llvm;
++using namespace std;
++
++const string InstrumentASTVisitor::KEY_HEADER = "GOOMF_Header";
++const string InstrumentASTVisitor::KEY_INIT = "GOOMF_Init";
++const string InstrumentASTVisitor::KEY_END = "GOOMF_Dest";
++
++
++InstrumentASTVisitor::InstrumentASTVisitor(Rewriter &R, char *filepath)
++	: rewriter(R), fnMap(0), inMain(false) {
++	
++	if(filepath) {
++		ifstream instFile(filepath);
++		string line;
++
++		while(getline(instFile,line)) {
++			string fxName, varName, lineNum, code;
++			istringstream lineStream(line);
++			getline(lineStream, fxName, ',');
++			if (fxName.compare(KEY_HEADER) == 0 ) {
++				headerSnippet = line.substr(line.find_first_of("<")+1,line.find_last_of(">")-line.find_first_of("<")-1);
++			} else if (fxName.compare(KEY_INIT) == 0 ) {
++				initSnippet = line.substr(line.find_first_of("<")+1,line.find_last_of(">")-line.find_first_of("<")-1);
++			} else if (fxName.compare(KEY_END) == 0 ) {
++				endSnippet = line.substr(line.find_first_of("<")+1,line.find_last_of(">")-line.find_first_of("<")-1);
++			} else {
++				getline(lineStream, varName, ',');
++				getline(lineStream, lineNum, ',');
++				code = line.substr(line.find_first_of("<")+1,line.find_last_of(">")-line.find_first_of("<")-1);
++				instrumentLocationsMap.insert(make_pair<int,string>(atoi(lineNum.c_str()),varName));
++				instrumentationMap.insert(make_pair<int,string>(atoi(lineNum.c_str()),code));
++			}
++		}
++
++		for ( map<int,string>::iterator it=instrumentLocationsMap.begin(); 
++			  it != instrumentLocationsMap.end(); 
++			  it++ ) {
++			errs() << (*it).first << " => " << (*it).second << "\n";
++		}
++
++		errs() << "\n\n";
++
++		for ( map<int,string>::iterator it=instrumentationMap.begin(); 
++			  it != instrumentationMap.end(); 
++			  it++ ) {
++			errs() << (*it).first << " => " << (*it).second << "\n";
++		}
++	}
++}
++
++bool InstrumentASTVisitor::VisitDeclStmt(DeclStmt *declStmt) {
++	errs() << "<----- Visiting DeclStmt\n";
++	DeclGroupRef DR = declStmt->getDeclGroup();
++	if (fnMap && fnMap->hasParent(declStmt)) {
++		Stmt *parent = fnMap->getParent(declStmt);
++		errs() << "*** DeclStmt parent type: " << parent->getStmtClassName() << "\n";
++	}
++	for (DeclGroupRef::iterator b = DR.begin(), e = DR.end();
++			b != e;
++			++b) {
++		errs() << "***** decl kind: " << (*b)->getDeclKindName() << "\n";
++		if(isa<VarDecl>(*b)) {
++			VarDecl *vd = (VarDecl *)(*b);
++			errs() << "--- Found variable declaration: " << vd->getNameAsString() << "\n"
++			     << "    -> Declaration Context: " << (vd->getDeclContext())->getDeclKindName() << "\n"
++			     << "    -> has init: " << vd->hasInit() << "\n";
++
++			if (vd->hasInit()) {
++				LocationTuple stmtLoc = getLocTuple(declStmt);
++				errs() << "VarDecl with init Found on lines: " << stmtLoc.line1 << "-" << stmtLoc.line2 << "\n";
++				errs() << "Var declared: " << vd->getNameAsString() << "\n";
++				string decName = vd->getNameAsString();
++				for (unsigned lineNum = stmtLoc.line1; lineNum <= stmtLoc.line2; ++lineNum) {
++					if(instrumentLocationsMap.find(lineNum) != instrumentLocationsMap.end()
++						&& decName.compare(instrumentLocationsMap[lineNum]) == 0) {
++						insertInstrumentation(lineNum, vd->getNameAsString(), declStmt);
++					}
++				}
++			}
++
++		}
++	}
++	return true;
++}
++
++bool InstrumentASTVisitor::VisitBinaryOperator(BinaryOperator *bop) {
++	errs() << "<----- Visiting BinaryOperator\n";
++	errs() << "BinaryOp Type: " << bop->getOpcodeStr() << "\n";
++
++	if (! (bop->isAssignmentOp()) ) return true;
++
++	Expr *lhs = bop->getLHS();
++
++	LocationTuple stmtLoc = getLocTuple(bop);
++	errs()	<< "Binary Assignment Operation Found on lines: " 
++					<< stmtLoc.line1 << ":" << stmtLoc.col1 << "-" << stmtLoc.line2 << ":" << stmtLoc.col2 << "\n";
++
++	string vName;
++	if (isa<ArraySubscriptExpr>(bop->getLHS())) {
++		errs() << "    Array subscript expr\n";
++		ArraySubscriptExpr *asExpr = (ArraySubscriptExpr *) (lhs);
++		errs() << "          Base: " << getSourceRangeAsString(asExpr->getBase()->getSourceRange()) << "\n"
++					 << "           Idx: " << getSourceRangeAsString(asExpr->getIdx()->getSourceRange()) << "\n";
++		vName = getSourceRangeAsString(asExpr->getLHS()->getSourceRange());
++	} else if (isa<MemberExpr>(lhs)) {
++		errs() << "    Member expr\n";
++		MemberExpr *mExpr = (MemberExpr *) (lhs );
++		DeclarationNameInfo dNameInfo =  mExpr->getMemberNameInfo() ;
++		errs() << "          Base: " << getSourceRangeAsString(mExpr->getBase()->getSourceRange()) << "\n"
++					 << "        Member: " << dNameInfo.getAsString() << "\n";
++
++		vName = getSourceRangeAsString(mExpr->getBase()->getSourceRange());
++
++		if (isa<ArraySubscriptExpr>(mExpr->getBase())) {
++			ArraySubscriptExpr * asExpr = (ArraySubscriptExpr *)(mExpr->getBase());
++			errs() << "    Array name: " << getSourceRangeAsString(asExpr->getBase()->getSourceRange()) << "\n"
++						 << "           Idx: " << getSourceRangeAsString(asExpr->getIdx()->getSourceRange()) << "\n";
++			vName = getSourceRangeAsString(asExpr->getLHS()->getSourceRange());
++		}
++	} else if(isa<DeclRefExpr>(lhs)) {
++		errs() << "       decl name: " << ( (DeclRefExpr *) lhs )->getFoundDecl()->getNameAsString() << "\n";
++		vName = ( (DeclRefExpr *) (lhs) )->getFoundDecl()->getNameAsString();
++	}
++
++
++	errs() << "    LHS source: " << getSourceRangeAsString(lhs->getSourceRange()) << "\n";
++	
++	checkAndInstrument(bop, bop->getLHS(), vName);
++
++	return true;
++}
++
++bool InstrumentASTVisitor::VisitUnaryOperator(UnaryOperator *uop) {
++	errs() << "<----- Visiting UnaryOperator\n";
++	errs() << "UnaryOp Type: " << UnaryOperator::getOpcodeStr(uop->getOpcode()) << "\n";
++	errs() << "UnaryOp SubExpr Type: " << uop->getSubExpr()->getStmtClassName() << "\n";
++	errs() << "UnaryOp SubExpr: " << getSourceRangeAsString(uop->getSubExpr()->getSourceRange()) << "\n";
++
++	string vName;
++	Expr *subExpr = uop->getSubExpr();
++	if (isa<DeclRefExpr>(subExpr)) {
++		vName = ((DeclRefExpr *)subExpr)->getFoundDecl()->getNameAsString();
++	} else if (isa<ArraySubscriptExpr>(subExpr)) {
++		vName = getSourceRangeAsString(((ArraySubscriptExpr *)subExpr)->getLHS()->getSourceRange());
++	} else if (isa<MemberExpr>(subExpr)) {
++		MemberExpr *mExpr = (MemberExpr *)subExpr;
++		vName = getSourceRangeAsString(mExpr->getBase()->getSourceRange());
++
++		if (isa<ArraySubscriptExpr>(mExpr->getBase())) {
++			ArraySubscriptExpr * asExpr = (ArraySubscriptExpr *)(mExpr->getBase());
++			vName = getSourceRangeAsString(asExpr->getLHS()->getSourceRange());
++		}
++	}
++
++	checkAndInstrument(uop, uop->getSubExpr(), vName);
++
++	return true;
++}
++
++bool InstrumentASTVisitor::VisitReturnStmt(ReturnStmt *rstmt) {
++	if (inMain) {
++		rewriter.InsertText(rstmt->getLocStart(),endSnippet,true,true);
++	}
++	return true;
++}
++
++bool InstrumentASTVisitor::VisitFunctionDecl(FunctionDecl *f) {
++	inMain = false;
++
++	if(f->hasBody()) {
++		Stmt *FuncBody = f->getBody();
++		if (fnMap) {
++			free(fnMap);
++		}
++		fnMap = new ParentMap(FuncBody);
++	}
++
++	if(f->isMain() && f->hasBody()) {
++		CompoundStmt *body = (CompoundStmt *)f->getBody();
++		rewriter.InsertText(( *(body->body_begin()) )->getLocStart(),initSnippet,true,true);
++
++		if (!isa<ReturnStmt>(body->body_back())) {
++			SourceLocation eLoc = Lexer::findLocationAfterToken(
++						body->body_back()->getLocEnd(),
++						tok::semi, 
++						rewriter.getSourceMgr(), 
++						rewriter.getLangOpts(), 
++						false);
++			rewriter.InsertText(eLoc,endSnippet,true,true);
++		}
++
++		inMain = true;
++	}
++	return true;
++}
++
++string InstrumentASTVisitor::getHeaderSnippet() {
++	return headerSnippet;
++}
++
++InstrumentASTVisitor::LocationTuple InstrumentASTVisitor::getLocTuple(Stmt *s) {
++	LocationTuple tuple = {
++		rewriter.getSourceMgr().getExpansionLineNumber(s->getLocStart()),
++		rewriter.getSourceMgr().getExpansionColumnNumber(s->getLocStart()),
++		rewriter.getSourceMgr().getExpansionLineNumber(s->getLocEnd()),
++		rewriter.getSourceMgr().getExpansionColumnNumber(s->getLocEnd())
++	};
++	return tuple;
++}
++
++void InstrumentASTVisitor::checkAndInstrument(Stmt *stmt, Stmt *subExpr, string varName) {
++	LocationTuple stmtLoc = getLocTuple(stmt);
++	for (unsigned lineNum = stmtLoc.line1; lineNum <= stmtLoc.line2; ++lineNum) {
++		if(instrumentLocationsMap.find(lineNum) != instrumentLocationsMap.end()
++			&& varName.compare(instrumentLocationsMap[lineNum]) == 0) {
++
++			ArraySubscriptExpr *asExpr =( (ArraySubscriptExpr *) subExpr );
++			if (isa<ArraySubscriptExpr>(subExpr)) {
++				varName += "[";
++				varName += getSourceRangeAsString(asExpr->getRHS()->getSourceRange());
++				varName += "]";
++			}
++			insertInstrumentation(lineNum, varName, stmt);
++			break;
++		}
++	}
++}
++
++void InstrumentASTVisitor::insertInstrumentation(unsigned lineNum, string varName, Stmt *s) {
++	if (instrumentationMap.find(lineNum) == instrumentationMap.end()) {
++		errs() << "WARNING: Could not instrument [** " << varName << " **] at line: " << lineNum << "\n";
++		return;
++	}
++	string inst = instrumentationMap[lineNum];
++
++	LocationTuple stmtLoc = getLocTuple(s);
++
++	errs()	<< "Instrumenting [** " << varName << " **] after " 
++					<< stmtLoc.line1 << ":" << stmtLoc.col1 << "-" << stmtLoc.line2 << ":" << stmtLoc.col2 << "\n";
++
++	SourceLocation eLoc = Lexer::findLocationAfterToken(
++		s->getLocEnd(),
++		tok::semi, 
++		rewriter.getSourceMgr(), 
++		rewriter.getLangOpts(), 
++		false);
++
++	if (eLoc.isValid()) {
++		rewriter.InsertText(eLoc, inst, true, true);
++		return;
++	}
++
++	Stmt *parent, *child;
++	for (child = s, parent = fnMap->hasParent(s) ? fnMap->getParent(s) : NULL;
++			parent != NULL;
++			child = parent, parent = fnMap->hasParent(parent) ? fnMap->getParent(parent) : NULL) {
++
++		if (isa<ForStmt>(parent)) {
++			ForStmt *pStmt = (ForStmt *)parent;
++			if (pStmt->getInit() == child) {
++				eLoc = Lexer::findLocationAfterToken(
++						child->getLocEnd(),
++						tok::semi, 
++						rewriter.getSourceMgr(), 
++						rewriter.getLangOpts(), 
++						false).getLocWithOffset(-1);
++				if (eLoc.isValid()) {
++					rewriter.InsertText(eLoc, inst, true, true);
++				}
++				return;
++			} else if (pStmt->getInc() == child) {
++				Stmt *body = ( (CompoundStmt *) (pStmt->getBody()) )->body_back();
++				if (body) {
++					eLoc = Lexer::findLocationAfterToken(
++						body->getLocEnd(),
++						tok::semi, 
++						rewriter.getSourceMgr(), 
++						rewriter.getLangOpts(), 
++						false);
++					if (eLoc.isValid()) {
++						rewriter.InsertText(eLoc, inst, true, true);
++					}
++				}
++				return;
++			}
++		} else if (isa<IfStmt>(parent)) {
++			IfStmt *pStmt = (IfStmt *)parent;
++			if (pStmt->getCond() == child) {
++				if ( pStmt->getThen() && isa<CompoundStmt>(pStmt->getThen()) ) {
++					CompoundStmt *cStmt = (CompoundStmt *) (pStmt->getThen());
++					eLoc = ( *(cStmt->body_begin()) )->getLocStart();
++					if (eLoc.isValid()) {
++						rewriter.InsertText(eLoc, inst, true, true);
++					}
++				}
++
++				if ( pStmt->getElse() && isa<CompoundStmt>(pStmt->getElse()) ) {
++					CompoundStmt *cStmt = (CompoundStmt *) (pStmt->getElse());
++					eLoc = ( *(cStmt->body_begin()) )->getLocStart();
++					if (eLoc.isValid()) {
++						rewriter.InsertText(eLoc, inst, true, true);
++					}
++				}
++				return;
++			}
++		} else if (isa<WhileStmt>(parent)) {
++			WhileStmt *pStmt = (WhileStmt *)parent;
++			if (pStmt->getCond() == child) {
++				eLoc = pStmt->getBody()->getLocStart();
++				if (isa<CompoundStmt>(pStmt->getBody())) {
++					CompoundStmt *cStmt = (CompoundStmt *) (pStmt->getBody());
++					eLoc = ( *(cStmt->body_begin()) )->getLocStart();
++				}
++				if (eLoc.isValid()) {
++					rewriter.InsertText(eLoc, inst, true, true);
++				}
++
++				eLoc = pStmt->getLocEnd().getLocWithOffset(1);
++				if (eLoc.isValid()) {
++					rewriter.InsertText(eLoc, inst, true, true);
++				}
++				return;
++			}
++		} else if (isa<DoStmt>(parent)) {
++			DoStmt *pStmt = (DoStmt *)parent;
++			if (pStmt->getCond() == child) {
++				CompoundStmt *cStmt = (CompoundStmt *) (pStmt->getBody());
++				eLoc = ( *(cStmt->body_begin()) )->getLocStart();
++				if (eLoc.isValid()) {
++					rewriter.InsertText(eLoc, inst, true, true);
++				}
++
++				eLoc = Lexer::findLocationAfterToken(
++					pStmt->getLocEnd(),
++					tok::semi, 
++					rewriter.getSourceMgr(), 
++					rewriter.getLangOpts(), 
++					false);
++
++				if (eLoc.isValid()) {
++					rewriter.InsertText(eLoc, inst, true, true);
++				}
++				return;
++			}
++		}
++	}
++	
++	errs()	<< "WARNING: Could not instrument [** " << varName << " **] after " 
++					<< stmtLoc.line1 << ":" << stmtLoc.col1 << "-" << stmtLoc.line2 << ":" << stmtLoc.col2 << "\n";
++}
++
++string InstrumentASTVisitor::getSourceRangeAsString(SourceRange range) {
++	SourceManager &sourceManager = rewriter.getSourceMgr();
++	if (range.getBegin().isMacroID() || range.getEnd().isMacroID()) {
++		// handle this case
++		return string();
++	} else if (!sourceManager.isFromSameFile(range.getBegin(), range.getEnd())) {
++		// handle this case
++		return string();
++	} else {
++		range.setEnd(Lexer::getLocForEndOfToken(range.getEnd(),0,sourceManager, rewriter.getLangOpts()));
++		const char *begin = sourceManager.getCharacterData(range.getBegin());
++		const char *end   = sourceManager.getCharacterData(range.getEnd());
++		return string(begin, end - begin);
++  	}
++} 
+Index: tools/auto-instrument/InsertBracesASTVisitor.h
+===================================================================
+--- tools/auto-instrument/InsertBracesASTVisitor.h	(revision 0)
++++ tools/auto-instrument/InsertBracesASTVisitor.h	(revision 0)
+@@ -0,0 +1,25 @@
++#ifndef INSERTBRACESASTVISITOR_H
++#define INSERTBRACESASTVISITOR_H
++
++#include "clang/AST/RecursiveASTVisitor.h"
++#include "clang/AST/Stmt.h"
++#include "clang/Basic/SourceLocation.h"
++#include "clang/Rewrite/Rewriter.h"
++
++using namespace clang;
++
++class InsertBracesASTVisitor : public RecursiveASTVisitor<InsertBracesASTVisitor> {
++public:
++	InsertBracesASTVisitor(Rewriter &R);
++
++	bool VisitIfStmt(IfStmt *ifstmt);
++	bool VisitWhileStmt(WhileStmt *whilestmt);
++	bool VisitForStmt(ForStmt *forstmt);
++
++private:
++	Rewriter &rewriter;
++
++	void InsertBracesAroundStmt(SourceRange range);
++};
++
++#endif /* INSERTBRACESASTVISITOR_H */
+Index: tools/auto-instrument/InstrumentASTConsumer.h
+===================================================================
+--- tools/auto-instrument/InstrumentASTConsumer.h	(revision 0)
++++ tools/auto-instrument/InstrumentASTConsumer.h	(revision 0)
+@@ -0,0 +1,30 @@
++#ifndef INSTRUMENTASTCONSUMER_H
++#define INSTRUMENTASTCONSUMER_H
++
++#include "clang/AST/ASTConsumer.h"
++#include "clang/AST/DeclGroup.h"
++#include "clang/Rewrite/Rewriter.h"
++
++#include "InstrumentASTVisitor.h"
++
++using namespace clang;
++using namespace std;
++
++class InstrumentASTConsumer : public ASTConsumer {
++public:
++	InstrumentASTConsumer(Rewriter &rewriter, char *filepath);
++
++	// virtual void HandleTranslationUnit(clang::ASTContext &Context) {
++	// 	visitor.TraverseDecl(Context.getTranslationUnitDecl());
++	// }
++
++	// gets called for each parsed top-level declaration
++	virtual bool HandleTopLevelDecl(DeclGroupRef DR);
++
++	string getHeaderSnippet();
++
++private:
++	InstrumentASTVisitor visitor;
++};
++
++#endif /* INSTRUMENTASTCONSUMER_H */

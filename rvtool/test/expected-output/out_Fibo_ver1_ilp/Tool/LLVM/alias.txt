@@ -1,0 +1,7 @@
+[g0] 
+main
+2
+may alias
+main_n
+main_i
+

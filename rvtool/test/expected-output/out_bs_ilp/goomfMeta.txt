@@ -1,0 +1,2 @@
+binary_search_low,int,globalFUNC
+binary_search_up,int,globalFUNC

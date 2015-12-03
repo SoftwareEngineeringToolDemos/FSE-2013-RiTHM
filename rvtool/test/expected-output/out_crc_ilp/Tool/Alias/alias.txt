@@ -1,0 +1,21 @@
+Alias Set Tracker: 4 alias sets for 4 pointer values.
+  AliasSet[0x393ca20, 1] must alias, Mod/Ref   Pointers: (i16* %crc.addr, 2)
+  AliasSet[0x393cb80, 1] must alias, Mod/Ref   Pointers: (i8* %onech.addr, 1)
+  AliasSet[0x3908c80, 1] must alias, Mod/Ref   Pointers: (i16* %ans, 2)
+  AliasSet[0x3938450, 1] must alias, Mod/Ref   Pointers: (i32* @icrc1_i, 4)
+Alias Set Tracker: 9 alias sets for 21 pointer values.
+  AliasSet[0x3938450, 1] must alias, Mod/Ref   Pointers: (i16* %crc.addr, 2)
+  AliasSet[0x3908c80, 1] must alias, Mod/Ref   Pointers: (i64* %len.addr, 8)
+  AliasSet[0x393cb80, 1] must alias, Mod/Ref   Pointers: (i16* %jinit.addr, 2)
+  AliasSet[0x393ca20, 1] must alias, Mod/Ref   Pointers: (i32* %jrev.addr, 4)
+  AliasSet[0x3916cd0, 1] must alias, Mod/Ref   Pointers: (i16* %cword, 2)
+  AliasSet[0x39161b0, 13] may alias, Mod/Ref   Pointers: (i16* @icrc.init, 2), (i16* %arrayidx, 2), (i8* %arrayidx6, 1), (i8* %arrayidx11, 1), (i8* %arrayidx15, 1), (i8* %arrayidx34, 1), (i8* %arrayidx40, 1), (i8* %arrayidx56, 1), (i8* %arrayidx58, 1), (i8* %arrayidx67, 1), (i16* %arrayidx77, 2), (i8* %arrayidx97, 1), (i8* %arrayidx103, 1)
+  AliasSet[0x392a680, 1] must alias, Mod/Ref   Pointers: (i16* %j, 2)
+  AliasSet[0x3935ca0, 1] must alias, Mod/Ref   Pointers: (i16* %tmp1, 2)
+  AliasSet[0x3906810, 1] must alias, Mod/Ref   Pointers: (i16* %tmp2, 2)
+Alias Set Tracker: 5 alias sets for 7 pointer values.
+  AliasSet[0x393cb80, 1] must alias, Mod       Pointers: (i32* %retval, 4)
+  AliasSet[0x3908c80, 1] must alias, Mod/Ref   Pointers: (i64* %n, 8)
+  AliasSet[0x3938450, 3] may alias, Mod/Ref   Pointers: (i8* %arrayidx, 1), (i8* %arrayidx3, 1), (i8* %arrayidx7, 1)
+  AliasSet[0x393cad0, 1] must alias, Mod/Ref   Pointers: (i16* %i1, 2)
+  AliasSet[0x39161b0, 1] must alias, Mod       Pointers: (i16* %i2, 2)

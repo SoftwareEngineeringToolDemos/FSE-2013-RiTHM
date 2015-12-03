@@ -1,0 +1,7 @@
+[g0] 
+binary_search
+2
+may alias
+key
+key6
+
