@@ -1,6 +1,6 @@
 # FSE-2013-RiTHM
 
-# Additional Acknowledgements #
+# Acknowledgements #
 
 This repository is contains information related to the tool RiTHM presented Foundations of Software Engineering, 2013. The tool was originally presented in [this paper](http://dl.acm.org/citation.cfm?doid=2491411.2494596).
 
