@@ -1,6 +1,6 @@
 # FSE-2013-RiTHM
 
-This repository is contains information related to the tool RiTHM presented Foundations of Software Engineering, 2013. The tool was originally presented in [this paper](http://dl.acm.org/citation.cfm?doid=2491411.2494596).
+This repository contains information related to the tool RiTHM presented at Foundations of Software Engineering, 2013. The tool was originally presented in [this paper](http://dl.acm.org/citation.cfm?doid=2491411.2494596).
 
 This repository _is not_ the original repository for this tool. Here are some links to the original project:
 * [The original download page](https://uwaterloo.ca/embedded-software-group/projects/rithm)
