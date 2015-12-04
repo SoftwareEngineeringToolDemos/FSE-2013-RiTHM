@@ -9,7 +9,7 @@ This repository _is not_ the original repository for this tool. Here are some li
 * [The original video] (https://www.youtube.com/watch?v=KUpiDdejbHM) 
 
 In this repository, for RiTHM you will find:
-* :x: Source code (not available)
+* :white_check_mark: [Source code](https://github.com/SoftwareEngineeringToolDemos/FSE-2013-RiTHM/tree/master/rvtool/src) (available)
 * :x: Binaries for the project (not available)
 * :x: The original tool (not available)
 * :x: Vagrant script to create the Virtual machine containing the tool (not available)
