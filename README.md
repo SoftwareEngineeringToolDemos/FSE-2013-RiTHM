@@ -4,6 +4,7 @@ This repository contains information related to the tool RiTHM presented at Foun
 
 This repository _is not_ the original repository for this tool. Here are some links to the original project:
 * [The original project page](https://uwaterloo.ca/embedded-software-group/projects/rithm)
+* [The original download page](https://uwaterloo.ca/embedded-software-group/projects/rithm)
 * [The original video] (https://www.youtube.com/watch?v=KUpiDdejbHM) 
 
 In this repository, for RiTHM you will find:
