@@ -9,10 +9,8 @@ This repository _is not_ the original repository for this tool. Here are some li
 
 In this repository, for RiTHM you will find:
 * :white_check_mark: [Source code](https://github.com/SoftwareEngineeringToolDemos/FSE-2013-RiTHM/tree/master/rvtool/src) (available)
-* :x: Binaries for the project (not available)
-* :x: The original tool (not available)
-* :x: Vagrant script to create the Virtual machine containing the tool (not available)
-* :x: Virtual machine containing the tool (not available)
+* :x: Executable tool (not available)
+* :x: Virtual machine containing tool (not available)
 
 This repository was constructed by [Priyadarshini Rajagopal](https://github.com/PriyadarshiniRajagopal) under the supervision of [Emerson Murphy-Hill](https://github.com/CaptainEmerson).  
 
